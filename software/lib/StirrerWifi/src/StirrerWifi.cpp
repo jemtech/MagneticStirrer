@@ -49,6 +49,10 @@ void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
     #endif
 }
 
+IPAddress StirrerWifi::localIP(){
+    return WiFi.localIP();
+}
+
 void StirrerWifi::setupMdns(const char* stirrerId){
     char host[128];
     if (strlen(stirrerId) > 0) {

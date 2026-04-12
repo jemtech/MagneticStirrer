@@ -7,6 +7,7 @@ class StirrerWifi{
     public:
         void setup(StirrerConfig::Wifi * wifiConfigPointer);
         void setupMdns(const char* stirrerId);
+        IPAddress localIP();
     private:
         void fallBackAP(void);
 };

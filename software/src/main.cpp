@@ -6,6 +6,7 @@
 /*#include <MqttHandler.h>*/
 #include <StirrerWifi.h>
 #include <StirrerWebserver.h>
+#include <StirrerDisplay.h>
 
 #define DEBUG
 
@@ -14,6 +15,7 @@ StirrerConfig stirrerConfig;
 long int lastLoop;
 /*MqttHandler * mqttHandlerPointer;*/
 StirrerWebserver webServer;
+StirrerDisplay stirrerDisplay;
 
 /* setup function */
 void setup(void) {
@@ -33,6 +35,13 @@ void setup(void) {
     Serial.println(jsonResult);
     #endif
 
+    stirrerDisplay.setup();
+    #ifdef DEBUG
+    Serial.println("Display ready");
+    #endif
+
+    stirrerDisplay.write("start Wifi");
+
     StirrerWifi stirrerWifi;
     stirrerWifi.setup(&(stirrerConfig.wifi));
     stirrerWifi.setupMdns("0"); // hardcode to stirrer 0 later use config
@@ -40,6 +49,8 @@ void setup(void) {
     #ifdef DEBUG
     Serial.println("wifi setup");
     #endif
+
+    stirrerDisplay.write(stirrerWifi.localIP().toString().c_str());
 
     ArduinoOTA.begin();
 
