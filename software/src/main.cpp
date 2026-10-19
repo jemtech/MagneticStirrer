@@ -12,7 +12,7 @@
 
 
 StirrerConfig stirrerConfig;
-long int lastLoop;
+unsigned long lastLoop;
 /*MqttHandler * mqttHandlerPointer;*/
 StirrerWebserver webServer;
 StirrerDisplay stirrerDisplay;
@@ -50,7 +50,8 @@ void setup(void) {
     Serial.println("wifi setup");
     #endif
 
-    stirrerDisplay.write(stirrerWifi.localIP().toString().c_str());
+    String ipAddress = stirrerWifi.localIP().toString();
+    stirrerDisplay.write(ipAddress.c_str());
 
     ArduinoOTA.begin();
 
@@ -86,9 +87,10 @@ void setup(void) {
 /* main loop */
 void loop(void) {
     /* check for software update */
-    ArduinoOTA.handle(); 
+    ArduinoOTA.handle();
 
-    if(1 < millis() - lastLoop) {
+    // Check if 1000ms (1 second) has elapsed for periodic tasks
+    if(millis() - lastLoop >= 1000) {
         lastLoop = millis();
         /*mqttHandlerPointer->publishStatus("sleep");*/
     }

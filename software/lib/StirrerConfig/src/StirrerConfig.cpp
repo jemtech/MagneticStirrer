@@ -36,17 +36,14 @@ void StirrerConfig::loadWifi(){
         writeWifi();
         preferences.begin("wifi", RO_MODE);
     }
-    wifi.ssid = readPrefString("ssid");
-    wifi.password = readPrefString("password");
+    wifi.ssid = preferences.getString("ssid");
+    wifi.password = preferences.getString("password");
     preferences.end();
 }
 
 const char* StirrerConfig::readPrefString(const char * key){
     String origString = preferences.getString(key);
-    const char * stringVal = origString.c_str();
-    char * outVal = (char *) malloc((strlen(stringVal) + 1) * sizeof(char));
-    strcpy(outVal, stringVal);
-    return outVal;
+    return origString.c_str();
 }
 
 void StirrerConfig::loadMqtt(){
@@ -65,9 +62,9 @@ void StirrerConfig::loadMqtt(){
         writeMqtt();
         preferences.begin("mqtt", RO_MODE); // read only
     }
-    mqtt.ip = readPrefString("ip"); 
-    mqtt.user = readPrefString("user"); 
-    mqtt.password = readPrefString("password"); 
+    mqtt.ip = preferences.getString("ip");
+    mqtt.user = preferences.getString("user");
+    mqtt.password = preferences.getString("password");
     preferences.end();
 }
 

@@ -24,7 +24,7 @@ void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
     Serial.println(wifiConfigPointer->ssid);
     #endif
 
-    WiFi.begin(wifiConfigPointer->ssid, wifiConfigPointer->password);
+    WiFi.begin(wifiConfigPointer->ssid.c_str(), wifiConfigPointer->password.c_str());
     int wifiTries = 0;
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -32,7 +32,7 @@ void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
         #ifdef DEBUG
         Serial.print(".");
         #endif
-        if(wifiTries > 10){
+        if(wifiTries >= 10){
             fallBackAP();
             //old logic
             //reboots the chip
@@ -56,14 +56,22 @@ IPAddress StirrerWifi::localIP(){
 void StirrerWifi::setupMdns(const char* stirrerId){
     char host[128];
     if (strlen(stirrerId) > 0) {
-        sprintf(host, "esp32stirrer_%s.lan", stirrerId);
+        // Ensure stirrerId doesn't overflow buffer (128 - "esp32stirrer_.lan\0" = ~110 chars max)
+        if (strlen(stirrerId) > 110) {
+            #ifdef DEBUG
+            Serial.println("stirrerId too long, truncating");
+            #endif
+            snprintf(host, sizeof(host), "esp32stirrer_%.110s.lan", stirrerId);
+        } else {
+            snprintf(host, sizeof(host), "esp32stirrer_%s.lan", stirrerId);
+        }
     } else {
         #ifdef DEBUG
         Serial.println("no stirrer id use mac");
         #endif
         byte mac[6];
         WiFi.macAddress(mac);
-        sprintf(host,"esp32stirrer_%02X_%02X_%02X_%02X_%02X_%02X.lan",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+        snprintf(host, sizeof(host), "esp32stirrer_%02X_%02X_%02X_%02X_%02X_%02X.lan",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
     }
     /*use mdns for host name resolution*/
     if (!MDNS.begin(host)) {

@@ -12,14 +12,14 @@ class StirrerConfig{
         void write();
         JsonDocument toJson();
         struct Wifi {
-                const char* ssid;
-                const char* password;
+                String ssid;
+                String password;
             };
         Wifi wifi;
         struct Mqtt {
-                const char* ip;
-                const char* user;
-                const char* password;
+                String ip;
+                String user;
+                String password;
             };
         Mqtt mqtt;
     private:
