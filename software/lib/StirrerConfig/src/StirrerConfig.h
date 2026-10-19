@@ -3,6 +3,7 @@
 
 #include <Preferences.h>
 #include <ArduinoJson.h>
+#include <functional>
 
 
 class StirrerConfig{
@@ -11,6 +12,11 @@ class StirrerConfig{
         void load();
         void write();
         JsonDocument toJson();
+        // Looks up a posted form field by name; returns false when it is missing.
+        typedef std::function<bool(const char* name, String& value)> FormLookup;
+        // Fills the config from the config form. Returns nullptr on success,
+        // otherwise the name of the first missing field (config is then partly updated).
+        const char* applyForm(const FormLookup& lookup);
         struct Wifi {
                 String ssid;
                 String password;

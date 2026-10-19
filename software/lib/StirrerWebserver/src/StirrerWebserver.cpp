@@ -73,40 +73,18 @@ void StirrerWebserver::setup(){
         #endif
 
         StirrerConfig stirrerConfig;
-        const AsyncWebParameter* p = request->getParam("wifiSsid", true);
-        if (p == nullptr) {
-            request->send(400, "text/plain", "Missing wifiSsid parameter");
+        const char* missing = stirrerConfig.applyForm([request](const char* name, String& value) {
+            const AsyncWebParameter* p = request->getParam(name, true);
+            if (p == nullptr) {
+                return false;
+            }
+            value = p->value();
+            return true;
+        });
+        if (missing != nullptr) {
+            request->send(400, "text/plain", String("Missing ") + missing + " parameter");
             return;
         }
-        stirrerConfig.wifi.ssid = p->value();
-
-        p = request->getParam("wifiPwd", true);
-        if (p == nullptr) {
-            request->send(400, "text/plain", "Missing wifiPwd parameter");
-            return;
-        }
-        stirrerConfig.wifi.password = p->value();
-
-        p = request->getParam("mqttServerIp", true);
-        if (p == nullptr) {
-            request->send(400, "text/plain", "Missing mqttServerIp parameter");
-            return;
-        }
-        stirrerConfig.mqtt.ip = p->value();
-
-        p = request->getParam("mqttUser", true);
-        if (p == nullptr) {
-            request->send(400, "text/plain", "Missing mqttUser parameter");
-            return;
-        }
-        stirrerConfig.mqtt.user = p->value();
-
-        p = request->getParam("mqttPwd", true);
-        if (p == nullptr) {
-            request->send(400, "text/plain", "Missing mqttPwd parameter");
-            return;
-        }
-        stirrerConfig.mqtt.password = p->value();
 
         stirrerConfig.write();
         JsonDocument doc = stirrerConfig.toJson();

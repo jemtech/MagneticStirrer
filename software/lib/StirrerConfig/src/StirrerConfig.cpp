@@ -85,16 +85,16 @@ void StirrerConfig::writeWifi(){
     preferences.begin("wifi", RW_MODE); // read and write
     #ifdef DEBUG
     Serial.println("write wifi");
-    Serial.printf("write ssid:\"%s\"\n", wifi.ssid);
+    Serial.printf("write ssid:\"%s\"\n", wifi.ssid.c_str());
     #endif
     preferences.putString("ssid", wifi.ssid);
     #ifdef DEBUG
-    Serial.printf("read ssid:\"%s\"\n", preferences.getString("ssid"));
-    Serial.printf("write password:\"%s\"\n", wifi.password);
+    Serial.printf("read ssid:\"%s\"\n", preferences.getString("ssid").c_str());
+    Serial.printf("write password:\"%s\"\n", wifi.password.c_str());
     #endif
     preferences.putString("password", wifi.password);
     #ifdef DEBUG
-    Serial.printf("read password:\"%s\"\n", preferences.getString("password"));
+    Serial.printf("read password:\"%s\"\n", preferences.getString("password").c_str());
     #endif
     preferences.end();
 }
@@ -103,7 +103,7 @@ void StirrerConfig::writeMqtt(){
     preferences.begin("mqtt", RW_MODE); // read and write
     #ifdef DEBUG
     Serial.println("write mqtt");
-    Serial.printf("write ip:\"%s\"\n", mqtt.ip);
+    Serial.printf("write ip:\"%s\"\n", mqtt.ip.c_str());
     #endif
     preferences.putString("ip", mqtt.ip);
     preferences.putString("user", mqtt.user);
@@ -124,4 +124,22 @@ JsonDocument StirrerConfig::toJson(){
     mqttConfig["password"] = mqtt.password;
 
     return doc;
+}
+
+
+const char* StirrerConfig::applyForm(const FormLookup& lookup){
+    struct Field { const char* name; String* target; };
+    Field fields[] = {
+        {"wifiSsid", &wifi.ssid},
+        {"wifiPwd", &wifi.password},
+        {"mqttServerIp", &mqtt.ip},
+        {"mqttUser", &mqtt.user},
+        {"mqttPwd", &mqtt.password},
+    };
+    for (Field& field : fields) {
+        if (!lookup(field.name, *field.target)) {
+            return field.name;
+        }
+    }
+    return nullptr;
 }

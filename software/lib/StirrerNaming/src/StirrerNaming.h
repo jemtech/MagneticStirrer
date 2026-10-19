@@ -1,0 +1,15 @@
+#ifndef StirrerNaming_H // include guard
+#define StirrerNaming_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+// Hardware independent helpers for network names, so they can be unit tested on the host.
+
+// "esp32stirrer_<id>.lan" (id truncated to fit), or the MAC based name when stirrerId is empty.
+void buildMdnsHostName(char* out, size_t outSize, const char* stirrerId, const uint8_t mac[6]);
+
+// "ESP32-Stirrer-AP-AA:BB:CC:DD:EE:FF"
+void buildApSsid(char* out, size_t outSize, const uint8_t mac[6]);
+
+#endif // StirrerNaming_H
