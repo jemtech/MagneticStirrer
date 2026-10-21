@@ -21,7 +21,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
     _config  = config;
     _control = control;
 
-    // ── Statische Files ──────────────────────────────────────
+    // ── Static files ─────────────────────────────────────────
     myServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/html", (uint8_t*)gIndexHtmlData, gIndexHtmlSize);
     });
@@ -35,7 +35,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         request->send(200, "text/html", (uint8_t*)gConfigHtmlData, gConfigHtmlSize);
     });
 
-    // ── Config speichern (WiFi + MQTT) ───────────────────────
+    // ── Save config (WiFi + MQTT) ───────────────────────────
     myServer->on("/config.html", HTTP_POST, [this](AsyncWebServerRequest *request) {
         #ifdef DEBUG
         Serial.println("POST /config.html");
@@ -63,7 +63,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         request->send(response);
     });
 
-    // ── Config lesen ─────────────────────────────────────────
+    // ── Read config ──────────────────────────────────────────
     myServer->on("/api/config.json", HTTP_GET, [this](AsyncWebServerRequest *request) {
         #ifdef DEBUG
         Serial.println("GET /api/config.json");
@@ -74,7 +74,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         request->send(response);
     });
 
-    // ── Status lesen (Echtmesswerte) ─────────────────────────
+    // ── Read status (measured values) ────────────────────────
     myServer->on("/api/status.json", HTTP_GET, [this](AsyncWebServerRequest *request) {
         #ifdef DEBUG
         Serial.println("GET /api/status.json");
@@ -82,7 +82,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         AsyncResponseStream* response = request->beginResponseStream("application/json");
         JsonDocument doc;
 
-        // Messwerte
+        // Measured values
         doc["tempPlate"]      = _control->getTempPlate();
         doc["tempExt"]        = _control->getTempExt();
         doc["extConnected"]   = _control->isExtConnected();
@@ -90,7 +90,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         doc["pidMotorOutput"] = _control->getPidMotorOutput();
         doc["currentRpm"]     = _control->getCurrentRpm();
 
-        // Sollwerte
+        // Setpoints
         doc["targetTemp"]     = _config->control.targetTemp;
         doc["tempPlateMax"]   = _config->control.tempPlateMax;
         doc["targetRpm"]      = _config->control.targetRpm;

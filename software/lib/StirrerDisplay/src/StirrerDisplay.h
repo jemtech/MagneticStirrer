@@ -10,7 +10,7 @@ public:
     void write(const char* line1, const char* line2 = "");
     void clear();
 
-    // FIX #10: Konstanten zugänglich für StirrerEncoder (BUF = LCD_COLS + 1)
+    // public so callers can size line buffers (LCD_COLS + 1)
     static constexpr int LCD_COLS = 16;
     static constexpr int LCD_ROWS = 2;
 
@@ -18,7 +18,6 @@ private:
     void writeLine(uint8_t row, const char* text);
     hd44780_pinIO* lcd;
 
-    // FIX #9: static constexpr statt const int Member – spart RAM pro Instanz
     static constexpr int rs  = 19;
     static constexpr int en  = 23;
     static constexpr int db4 = 18;

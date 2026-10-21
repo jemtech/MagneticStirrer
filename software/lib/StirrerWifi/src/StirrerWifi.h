@@ -3,8 +3,8 @@
 
 class StirrerWifi {
 public:
-    // stirrerId wird vor WiFi.begin() als DHCP-Hostname gesetzt,
-    // damit der Router ihn als "hostname.lan" registriert.
+    // stirrerId is set as DHCP hostname before WiFi.begin(),
+    // so the router registers it as "hostname.lan".
     void setup(WifiConfig* wifiConfigPointer, const char* stirrerId);
     void setupMdns(const char* stirrerId);
     IPAddress localIP();

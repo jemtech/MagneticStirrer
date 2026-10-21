@@ -1,11 +1,11 @@
 #include "StirrerEncoder.h"
 
 volatile int           StirrerEncoder::_isrSteps    = 0;
-volatile unsigned long StirrerEncoder::_lastIsrTime = 0;  // FIX #3: unsigned long
+volatile unsigned long StirrerEncoder::_lastIsrTime = 0;
 
 // ── ISR ──────────────────────────────────────────────────────
 void IRAM_ATTR StirrerEncoder::isrEncoder() {
-    unsigned long now = millis();  // FIX #3: unsigned long
+    unsigned long now = millis();
     if (now - _lastIsrTime < DEBOUNCE_MS) return;
     _lastIsrTime = now;
     bool clk = digitalRead(PIN_ENC_CLK);
@@ -35,7 +35,7 @@ int StirrerEncoder::takeSteps() {
 // ── Button ───────────────────────────────────────────────────
 EncoderPress StirrerEncoder::takePress() {
     bool          pressed = digitalRead(PIN_ENC_SW) == LOW;
-    unsigned long now     = millis();  // FIX #3: unsigned long
+    unsigned long now     = millis();
 
     if (pressed && !_btnPressed) {
         _btnPressed   = true;
@@ -43,7 +43,7 @@ EncoderPress StirrerEncoder::takePress() {
     }
     if (!pressed && _btnPressed) {
         _btnPressed        = false;
-        unsigned long held = now - _btnPressTime;  // FIX #3: unsigned long
+        unsigned long held = now - _btnPressTime;
         if (held < BTN_DEBOUNCE_MS) return PRESS_NONE;
         return held >= LONGPRESS_MS ? PRESS_LONG : PRESS_SHORT;
     }

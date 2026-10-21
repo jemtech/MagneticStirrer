@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-// ── Pin-Definitionen ─────────────────────────────────────────
+// ── Pin definitions ───────────────────────────────────────────
 #define PIN_ENC_CLK   32
 #define PIN_ENC_DT    33
 #define PIN_ENC_SW    14
@@ -27,13 +27,12 @@ public:
     EncoderPress takePress();
 
 private:
-    // FIX #1: ISR-Variablen sind private (statische private Member
-    //         sind für statische private Methoden zugänglich)
+    // ISR state, private members are accessible from the static ISR
     static volatile int           _isrSteps;
-    static volatile unsigned long _lastIsrTime;  // FIX #3: unsigned long
+    static volatile unsigned long _lastIsrTime;
 
     static void IRAM_ATTR isrEncoder();
 
     bool          _btnPressed   = false;
-    unsigned long _btnPressTime = 0;   // FIX #3: unsigned long
+    unsigned long _btnPressTime = 0;
 };

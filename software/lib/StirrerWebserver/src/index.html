@@ -169,7 +169,7 @@
             });
         }
 
-        // ── Kalibrierung ─────────────────────────────────────
+        // ── Calibration ──────────────────────────────────────
         function calibrateMotor() {
             $('#calibResult').text('Measuring... full speed for 3s');
             postControl({ motorEnabled: true, targetRpm: 9999 });
@@ -221,7 +221,7 @@
                     $('#currentRpm').text(Math.round(r.currentRpm));
                     $('#pidMotorOutput').text(Math.round(r.pidMotorOutput));
 
-                    // PID Felder
+                    // PID fields
                     var pid = r.useExtSensor ? r.pidExt : r.pidPlate;
                     $('#pidKp').val(pid.kp);
                     $('#pidKi').val(pid.ki);
@@ -272,7 +272,7 @@
                           .attr('class', 'btn ' + (on ? 'btn-off' : 'btn-on'));
         }
 
-        // Status alle 2 Sekunden pollen
+        // Poll status every 2 seconds
         loadStatus();
         setInterval(loadStatus, 2000);
     </script>

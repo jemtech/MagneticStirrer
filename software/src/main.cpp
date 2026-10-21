@@ -24,7 +24,7 @@ const char* stirrerId = "0";  // hardcoded to stirrer 0, later use config
 #define MQTT_PUBLISH_INTERVAL 1000  // ms
 unsigned long lastMqttPublish = 0;
 
-// Hilfsfunktion: Serial + Display gleichzeitig
+// Helper: log to Serial and display at once
 void log(const char* line1, const char* line2 = "") {
     #ifdef DEBUG
     Serial.print(line1);
@@ -35,7 +35,7 @@ void log(const char* line1, const char* line2 = "") {
     Serial.println();
     #endif
     stirrerDisplay.write(line1, line2);
-    delay(100);  // kurz lesbar lassen
+    delay(100);  // keep it readable for a moment
 }
 
 void setup(void) {
@@ -96,10 +96,10 @@ void setup(void) {
         log("No MQTT server", "");
     }
 
-    // Bereit
+    // Ready
     log("Ready!", "");
     delay(100);
-    // Menu zeigt ab jetzt die Statusseite
+    // From now on the menu shows the status page
     stirrerMenu.setup(&stirrerConfig, &stirrerControl, &stirrerEncoder, &stirrerDisplay);
 }
 

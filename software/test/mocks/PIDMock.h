@@ -1,6 +1,6 @@
 #pragma once
 
-// Minimaler PID Mock
+// Minimal PID mock
 #define DIRECT    0
 #define REVERSE   1
 #define MANUAL    0

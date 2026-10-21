@@ -9,7 +9,7 @@
 #define MENU_REFRESH_MS   250   // redraw interval for changing sensor values
 #define MENU_MESSAGE_MS   800   // how long "Config saved!" is shown
 
-// ── Schrittweiten ────────────────────────────────────────────
+// ── Step sizes ───────────────────────────────────────────────
 #define STEP_TEMP     1.0f
 #define STEP_RPM      10
 #define STEP_TEMPMAX  5.0f

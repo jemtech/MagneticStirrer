@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "NTCSensor.h"
 
-// ── Hilfsfunktion ────────────────────────────────────────────
+// ── Helper ──────────────────────────────────────────────────
 // Calculates expected ADC value for a given temperature
 // NTC 100k, B=3950, fixed resistor 22k
 int tempToAdc(float tempC) {
@@ -36,36 +36,36 @@ void test_ntc_low_temperature() {
 }
 
 void test_ntc_connected() {
-    mock_analogRead_value = 2048;  // Mittelwert – verbunden
+    mock_analogRead_value = 2048;  // mid-range – connected
     NTCSensor ntc(34);
     TEST_ASSERT_TRUE(ntc.isConnected());
 }
 
 void test_ntc_disconnected_high() {
-    mock_analogRead_value = 4095;  // offen – kein NTC
+    mock_analogRead_value = 4095;  // open – no NTC
     NTCSensor ntc(34);
     TEST_ASSERT_FALSE(ntc.isConnected());
 }
 
 void test_ntc_disconnected_low() {
-    mock_analogRead_value = 0;  // Kurzschluss
+    mock_analogRead_value = 0;  // short circuit
     NTCSensor ntc(34);
     TEST_ASSERT_FALSE(ntc.isConnected());
 }
 
 void test_ntc_invalid_voltage_returns_error() {
-    mock_analogRead_value = 4095;  // 3.3V – Division by zero Schutz
+    mock_analogRead_value = 4095;  // 3.3V – division by zero guard
     NTCSensor ntc(34);
     float temp = ntc.readTemp();
     TEST_ASSERT_EQUAL_FLOAT(-999.0f, temp);
 }
 
 void test_ntc_custom_parameters() {
-    // 10k NTC, B=3380 – andere Konfiguration
+    // 10k NTC, B=3380 – different configuration
     NTCSensor ntc(34, 10000.0f, 10000.0f, 25.0f, 3380.0f);
     mock_analogRead_value = 2048;
     float temp = ntc.readTemp();
-    // Muss einen sinnvollen Wert liefern (nicht -999)
+    // Must return a plausible value (not -999)
     TEST_ASSERT_NOT_EQUAL(-999.0f, temp);
 }
 

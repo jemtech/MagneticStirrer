@@ -4,10 +4,10 @@
 #include "NTCSensor.h"
 #include "StirrerConfig.h"
 
-// ── Pin-Definitionen ─────────────────────────────────────────
+// ── Pin definitions ───────────────────────────────────────────
 #define PIN_NTC_PLATE     34
 #define PIN_NTC_EXT       35
-#define PIN_HALL          13   // Platzhalter, noch nicht angeschlossen
+#define PIN_HALL          13   // placeholder, not connected yet
 #define PIN_HEATER        25   // SSR  - check solder joint
 #define PIN_MOTOR         27   // MOSFET
 
@@ -16,7 +16,7 @@
 #define PID_MOTOR_INTERVAL_MS 200
 #define TEMP_PLATE_MAX    350.0
 
-// ── Kick-Start Dauer ─────────────────────────────────────────
+// ── Kick-start duration───────────────────────────────────────
 #define MOTOR_KICKSTART_MS  150
 
 class StirrerControl {
@@ -33,7 +33,7 @@ public:
     void setup(StirrerConfig* config);
     void update();
 
-    // Getters for webserver and encoder
+    // Getters for webserver, menu and mqtt
     float getTempPlate()      { return _tempPlate; }
     float getTempExt()        { return _tempExt; }
     bool  isExtConnected()    { return _extConnected; }
@@ -54,7 +54,7 @@ private:
 
     StirrerConfig* _config = nullptr;
 
-    // Temperatur PID
+    // Temperature PID
     double _pidTempInput    = 0;
     double _pidTempOutput   = 0;
     double _pidTempSetpoint = 0;
@@ -66,18 +66,18 @@ private:
     double _pidMotorSetpoint = 0;
     PID    _pidMotor;
 
-    // Messwerte
+    // Measured values
     float _tempPlate    = 0;
     float _tempExt      = 0;
     bool  _extConnected = false;
 
-    // FIX #2: Kick-Start nicht-blockierend – Timestamp statt delay()
+    // Non-blocking kick-start, tracked by timestamp
     bool          _motorWasOff      = true;
-    unsigned long _motorKickStart   = 0;   // 0 = kein Kick-Start aktiv
+    unsigned long _motorKickStart   = 0;   // 0 = no kick-start running
 
-    unsigned long _lastLoop = 0;   // FIX #3: unsigned long
+    unsigned long _lastLoop = 0;
 
-    // Hall-Sensor ISR
+    // Hall sensor ISR
     static volatile unsigned long _lastPulseTime;
     static volatile unsigned long _pulseInterval;
     static void IRAM_ATTR isrHall();

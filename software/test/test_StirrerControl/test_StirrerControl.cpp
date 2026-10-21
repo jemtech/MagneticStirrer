@@ -32,7 +32,7 @@ void setUp() {
 }
 void tearDown() {}
 
-// ── Sicherheitsabschaltung ────────────────────────────────────
+// ── Safety shutdown ─────────────────────────────────────────
 void test_safety_shutdown_above_max() {
     mock_analogRead_value     = tempToAdc(310.0f);  // above 300°C
     cfg.control.heaterEnabled = true;
@@ -47,7 +47,7 @@ void test_safety_shutdown_above_max() {
 }
 
 void test_safety_no_shutdown_below_max() {
-    mock_analogRead_value     = tempToAdc(150.0f);  // unter 300°C
+    mock_analogRead_value     = tempToAdc(150.0f);  // below 300°C
     cfg.control.heaterEnabled = true;
     cfg.control.tempPlateMax  = 300.0f;
 
@@ -60,7 +60,7 @@ void test_safety_no_shutdown_below_max() {
 }
 
 void test_safety_shutdown_on_sensor_error() {
-    mock_analogRead_value     = 4095;   // NTC getrennt → -999°C
+    mock_analogRead_value     = 4095;   // NTC disconnected → -999°C
     cfg.control.heaterEnabled = true;
 
     StirrerControl ctrl;
@@ -71,7 +71,7 @@ void test_safety_shutdown_on_sensor_error() {
     TEST_ASSERT_FALSE(cfg.control.heaterEnabled);
 }
 
-// ── Temperatursensor ─────────────────────────────────────────
+// ── Temperature sensor ───────────────────────────────────────
 void test_temp_plate_reading() {
     mock_analogRead_value = tempToAdc(80.0f);
     StirrerControl ctrl;
@@ -83,7 +83,7 @@ void test_temp_plate_reading() {
 
 void test_ext_sensor_not_connected() {
     cfg.control.useExtSensor = true;
-    mock_analogRead_value    = 4095;  // offen
+    mock_analogRead_value    = 4095;  // open
 
     StirrerControl ctrl;
     ctrl.setup(&cfg);
@@ -124,7 +124,7 @@ void test_pid_output_within_range() {
 void test_motor_pid_output_within_range() {
     cfg.control.motorEnabled = true;
     cfg.control.targetRpm    = 500.0f;
-    // Hall-Sensor: kein Puls → 0 RPM
+    // Hall sensor: no pulse → 0 RPM
     mock_micros_value = 0;
 
     StirrerControl ctrl;
@@ -137,9 +137,9 @@ void test_motor_pid_output_within_range() {
     TEST_ASSERT_LESS_OR_EQUAL   (100.0f, out);
 }
 
-// ── RPM Berechnung ───────────────────────────────────────────
+// ── RPM calculation ──────────────────────────────────────────
 void test_rpm_zero_when_no_pulse() {
-    // Letzter Puls vor langer Zeit → 0 RPM
+    // Last pulse long ago → 0 RPM
     StirrerControl::_lastPulseTime = 0;
     StirrerControl::_pulseInterval = 0;
     mock_micros_value = 5000000UL;  // 5 seconds later
@@ -150,10 +150,10 @@ void test_rpm_zero_when_no_pulse() {
 }
 
 void test_rpm_calculated_correctly() {
-    // 1 Puls pro 100ms = 600 RPM
+    // 1 pulse per 100ms = 600 RPM
     StirrerControl::_lastPulseTime = 0;
     StirrerControl::_pulseInterval = 100000UL;  // 100ms in µs
-    mock_micros_value              = 50000UL;   // innerhalb Timeout
+    mock_micros_value              = 50000UL;   // within timeout
 
     StirrerControl ctrl;
     ctrl.setup(&cfg);
@@ -166,17 +166,17 @@ void test_update_respects_interval() {
     StirrerControl ctrl;
     ctrl.setup(&cfg);
 
-    // Erster Update bei t=0
+    // First update at t=0
     mock_millis_value = 0;
     ctrl.update();
     float temp1 = ctrl.getTempPlate();
 
     // Second update too early (before PID_INTERVAL_MS)
     mock_analogRead_value = tempToAdc(100.0f);
-    mock_millis_value     = 100;  // nur 100ms – unter PID_INTERVAL_MS (500ms)
+    mock_millis_value     = 100;  // only 100ms – below PID_INTERVAL_MS (500ms)
     ctrl.update();
 
-    // Temperatur sollte noch nicht aktualisiert sein
+    // Temperature should not be updated yet
     TEST_ASSERT_EQUAL_FLOAT(temp1, ctrl.getTempPlate());
 }
 

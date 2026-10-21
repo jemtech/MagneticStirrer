@@ -15,7 +15,7 @@ void StirrerControl::setup(StirrerConfig* config) {
     _ntcPlate.setup();
     _ntcExt.setup();
 
-    // Hall-Sensor
+    // Hall sensor
     pinMode(PIN_HALL, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PIN_HALL), isrHall, FALLING);
 
@@ -25,7 +25,7 @@ void StirrerControl::setup(StirrerConfig* config) {
     // Heater SSR - 2Hz sufficient due to thermal inertia
     ledcAttach(PIN_HEATER, 2, 8);
 
-    // Temperatur PID
+    // Temperature PID
     _pidTempSetpoint = _config->control.targetTemp;
     _pidTemp.SetMode(AUTOMATIC);
     _pidTemp.SetOutputLimits(0, 255);
@@ -41,16 +41,16 @@ void StirrerControl::setup(StirrerConfig* config) {
 }
 
 void StirrerControl::update() {
-    unsigned long now = millis();  // FIX #3: unsigned long
+    unsigned long now = millis();
     if (PID_INTERVAL_MS > now - _lastLoop) return;
     _lastLoop = now;
 
-    // Temperaturen lesen
+    // Read temperatures
     _tempPlate    = _ntcPlate.readTemp();
     _extConnected = _ntcExt.isConnected() && _config->control.useExtSensor;
     if (_extConnected) _tempExt = _ntcExt.readTemp();
 
-    // Sicherheitsabschaltung – immer Platten-NTC
+    // Safety shutdown – always uses the plate NTC
     if (_tempPlate > _config->control.tempPlateMax || _tempPlate < -10.0) {
         _config->control.heaterEnabled = false;
         setHeater(0);
@@ -59,7 +59,7 @@ void StirrerControl::update() {
         #endif
     }
 
-    // Temperatur PID
+    // Temperature PID
     _pidTempInput    = _extConnected ? _tempExt : _tempPlate;
     _pidTempSetpoint = _config->control.targetTemp;
     applyTempPidConfig();
@@ -115,19 +115,19 @@ void StirrerControl::setMotor(int value) {
         return;
     }
 
-    // FIX #2: Nicht-blockierender Kick-Start – kein delay() mehr
+    // Non-blocking kick-start, no delay()
     if (_motorWasOff) {
-        // Kick-Start beginnen: Vollgas und Timestamp merken
+        // Start kick-start: full power and remember the timestamp
         ledcWrite(PIN_MOTOR, 255);
         _motorKickStart = millis();
         _motorWasOff    = false;
-        return;  // Erst beim nächsten update()-Aufruf weiter
+        return;  // continue on the next update() call
     }
 
-    // Kick-Start läuft noch? Warten ohne zu blockieren.
+    // Kick-start still running? Wait without blocking.
     if (_motorKickStart != 0) {
         if (millis() - _motorKickStart < MOTOR_KICKSTART_MS) return;
-        // Kick-Start abgeschlossen: I-Term-Reset um Windup zu vermeiden
+        // Kick-start done: reset the I-term to avoid windup
         _motorKickStart = 0;
         _pidMotor.SetMode(MANUAL);
         _pidMotorOutput = value;

@@ -61,7 +61,7 @@ void turn(int steps) {
     menu.update();
 }
 
-// ── Seiten-Navigation ────────────────────────────────────────
+// ── Page navigation ─────────────────────────────────────────
 void test_short_press_advances_page() {
     shortPresses(1);
     TEST_ASSERT_TRUE(display.lastLine1.find("TEMP") != std::string::npos);
@@ -69,7 +69,7 @@ void test_short_press_advances_page() {
 
 void test_page_wraps_around() {
     shortPresses(PAGE_COUNT);
-    // Statusseite zeigt keine eckigen Klammern
+    // Status page shows no square brackets
     TEST_ASSERT_TRUE(display.lastLine1.find("[") == std::string::npos);
 }
 
@@ -95,7 +95,7 @@ void test_rotate_increases_target_rpm() {
     TEST_ASSERT_EQUAL_FLOAT(before + 5 * STEP_RPM, cfg.control.targetRpm);
 }
 
-// ── Grenzwerte ───────────────────────────────────────────────
+// ── Limits ──────────────────────────────────────────────────
 void test_temp_constrained_to_max() {
     shortPresses(1);  // PAGE_TARGET_TEMP
     cfg.control.targetTemp = 349.0f;
@@ -117,7 +117,7 @@ void test_rpm_constrained_to_max_rpm() {
     TEST_ASSERT_LESS_OR_EQUAL(cfg.control.maxRpm, cfg.control.targetRpm);
 }
 
-// ── Status-Seite ─────────────────────────────────────────────
+// ── Status page ──────────────────────────────────────────────
 void test_status_page_shows_ist_and_soll() {
     control._tempPlate = 143.5f;
     // 287 rpm = 60e6 / interval µs
@@ -127,7 +127,7 @@ void test_status_page_shows_ist_and_soll() {
     mock_millis_value += MENU_REFRESH_MS;
     menu.update();
 
-    // Zeile 1 = Ist-Werte, Zeile 2 = Soll-Werte
+    // Line 1 = measured values, line 2 = setpoints
     TEST_ASSERT_TRUE(display.lastLine1.find("143") != std::string::npos);
     TEST_ASSERT_TRUE(display.lastLine1.find("287") != std::string::npos);
     TEST_ASSERT_TRUE(display.lastLine2.find("100") != std::string::npos);  // targetTemp
@@ -140,12 +140,12 @@ void test_status_rotate_does_nothing() {
     TEST_ASSERT_EQUAL_FLOAT(tempBefore, cfg.control.targetTemp);
 }
 
-// ── Display Inhalte ──────────────────────────────────────────
+// ── Display content ─────────────────────────────────────────
 void test_heater_page_shows_on_off() {
     shortPresses(5);  // PAGE_HEATER
-    turn(-1);  // links = OFF
+    turn(-1);  // left = OFF
     TEST_ASSERT_TRUE(display.lastLine1.find("OFF") != std::string::npos);
-    turn(1);   // rechts = ON
+    turn(1);   // right = ON
     TEST_ASSERT_TRUE(display.lastLine1.find("ON") != std::string::npos);
     TEST_ASSERT_TRUE(cfg.control.heaterEnabled);
 }
@@ -173,7 +173,7 @@ void test_sensor_change_redrawn_after_refresh_interval() {
     TEST_ASSERT_TRUE(display.lastLine1.find("50.0") != std::string::npos);
 }
 
-// ── Speichern ────────────────────────────────────────────────
+// ── Save ────────────────────────────────────────────────────
 void test_long_press_shows_message_without_blocking() {
     mock_millis_value += 100;
     press(LONGPRESS_MS);

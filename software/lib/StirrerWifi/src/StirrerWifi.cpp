@@ -3,7 +3,7 @@
 #include <ESPmDNS.h>
 #include <StirrerNaming.h>
 
-// Baut den Hostnamen aus stirrerId oder MAC-Adresse
+// Builds the hostname from stirrerId or the MAC address
 static void buildHostname(char* buf, size_t len, const char* stirrerId) {
     byte mac[6];
     WiFi.macAddress(mac);
@@ -13,8 +13,8 @@ static void buildHostname(char* buf, size_t len, const char* stirrerId) {
 void StirrerWifi::setup(WifiConfig* wifiConfigPointer, const char* stirrerId) {
     delay(50);
 
-    // FIX #8: DHCP-Hostname VOR WiFi.begin() setzen.
-    // Der Router registriert ihn dann als "hostname.lan" in seiner DNS-Zone.
+    // Set the DHCP hostname BEFORE WiFi.begin().
+    // The router then registers it as "hostname.lan" in its DNS zone.
     char host[128];
     buildHostname(host, sizeof(host), stirrerId);
     WiFi.setHostname(host);
@@ -55,9 +55,9 @@ IPAddress StirrerWifi::localIP() {
 }
 
 void StirrerWifi::setupMdns(const char* stirrerId) {
-    // mDNS nur für Service-Discovery (z.B. dns-sd).
-    // ".lan"-Auflösung läuft über Router-DNS, nicht über mDNS.
-    // MDNS.begin() bekommt den Hostnamen OHNE TLD.
+    // mDNS only for service discovery (e.g. dns-sd).
+    // ".lan" resolution goes through the router's DNS, not mDNS.
+    // MDNS.begin() gets the hostname WITHOUT TLD.
     char host[128];
     buildHostname(host, sizeof(host), stirrerId);
 
