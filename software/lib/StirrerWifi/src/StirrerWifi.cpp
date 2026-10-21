@@ -2,6 +2,7 @@
 #include <StirrerWifi.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <StirrerNaming.h>
 
 #define DEBUG
 
@@ -24,7 +25,7 @@ void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
     Serial.println(wifiConfigPointer->ssid);
     #endif
 
-    WiFi.begin(wifiConfigPointer->ssid, wifiConfigPointer->password);
+    WiFi.begin(wifiConfigPointer->ssid.c_str(), wifiConfigPointer->password.c_str());
     int wifiTries = 0;
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
@@ -32,7 +33,7 @@ void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
         #ifdef DEBUG
         Serial.print(".");
         #endif
-        if(wifiTries > 10){
+        if(wifiTries >= 10){
             fallBackAP();
             //old logic
             //reboots the chip
@@ -55,16 +56,9 @@ IPAddress StirrerWifi::localIP(){
 
 void StirrerWifi::setupMdns(const char* stirrerId){
     char host[128];
-    if (strlen(stirrerId) > 0) {
-        sprintf(host, "esp32stirrer_%s.lan", stirrerId);
-    } else {
-        #ifdef DEBUG
-        Serial.println("no stirrer id use mac");
-        #endif
-        byte mac[6];
-        WiFi.macAddress(mac);
-        sprintf(host,"esp32stirrer_%02X_%02X_%02X_%02X_%02X_%02X.lan",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    }
+    byte mac[6];
+    WiFi.macAddress(mac);
+    buildMdnsHostName(host, sizeof(host), stirrerId, mac);
     /*use mdns for host name resolution*/
     if (!MDNS.begin(host)) {
         #ifdef DEBUG
@@ -79,8 +73,6 @@ void StirrerWifi::setupMdns(const char* stirrerId){
     #endif
 }
 
-const char* AP_SSID_PREFIX = "ESP32-Stirrer-AP";
-
 void StirrerWifi::fallBackAP(void){
     #ifdef DEBUG
     Serial.println();
@@ -89,8 +81,8 @@ void StirrerWifi::fallBackAP(void){
 
     byte mac[6];
     WiFi.macAddress(mac);
-    char apSsid[18 + strlen(AP_SSID_PREFIX)];
-    sprintf(apSsid,"%s-%02X:%02X:%02X:%02X:%02X:%02X", AP_SSID_PREFIX, mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    char apSsid[64];
+    buildApSsid(apSsid, sizeof(apSsid), mac);
     #ifdef DEBUG
     Serial.println();
     Serial.print("ssid: ");

@@ -71,20 +71,22 @@ void StirrerWebserver::setup(){
             }
         }
         #endif
-        
+
         StirrerConfig stirrerConfig;
-        const AsyncWebParameter* p = request->getParam("wifiSsid", true);
-        stirrerConfig.wifi.ssid = p->value().c_str();
-        p = request->getParam("wifiPwd", true);
-        stirrerConfig.wifi.password = p->value().c_str();
-        p = request->getParam("mqttServerIp", true);
-        stirrerConfig.mqtt.ip = p->value().c_str();
-        p = request->getParam("mqttUser", true);
-        stirrerConfig.mqtt.user = p->value().c_str();
-        p = request->getParam("mqttPwd", true);
-        stirrerConfig.mqtt.password = p->value().c_str();
+        const char* missing = stirrerConfig.applyForm([request](const char* name, String& value) {
+            const AsyncWebParameter* p = request->getParam(name, true);
+            if (p == nullptr) {
+                return false;
+            }
+            value = p->value();
+            return true;
+        });
+        if (missing != nullptr) {
+            request->send(400, "text/plain", String("Missing ") + missing + " parameter");
+            return;
+        }
+
         stirrerConfig.write();
-        stirrerConfig.load();
         JsonDocument doc = stirrerConfig.toJson();
         AsyncResponseStream *response = request->beginResponseStream("application/json");
         serializeJson(doc, *response);

@@ -12,7 +12,7 @@
 
 
 StirrerConfig stirrerConfig;
-long int lastLoop;
+unsigned long lastLoop;
 /*MqttHandler * mqttHandlerPointer;*/
 StirrerWebserver webServer;
 StirrerDisplay stirrerDisplay;
@@ -54,7 +54,8 @@ void setup(void) {
     #endif
 
     stirrerDisplay.clear();
-    stirrerDisplay.print(stirrerWifi.localIP().toString().c_str());
+    String ipAddress = stirrerWifi.localIP().toString();
+    stirrerDisplay.write(ipAddress.c_str());
 
     ArduinoOTA.begin();
 
@@ -104,7 +105,7 @@ void stirrerOff(){
 /* main loop */
 void loop(void) {
     /* check for software update */
-    ArduinoOTA.handle(); 
+    ArduinoOTA.handle();
 
     if(2000 < millis() && 4000 > millis()) {
         stirrerOn(127);
@@ -118,7 +119,7 @@ void loop(void) {
         stirrerOff();
     }
     
-    if(1000 < millis() - lastLoop) {
+    if(millis() - lastLoop >= 1000) {
         lastLoop = millis();
         /*mqttHandlerPointer->publishStatus("sleep");*/
         stirrerDisplay.print("Test");
