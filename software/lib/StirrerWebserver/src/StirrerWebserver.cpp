@@ -40,20 +40,42 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         #ifdef DEBUG
         Serial.println("POST /config.html");
         #endif
-        auto getParam = [&](const char* name) -> String {
-            const AsyncWebParameter* p = request->getParam(name, true);
-            return p ? p->value() : String("");
-        };
-        _config->wifi.ssid     = getParam("wifiSsid");
-        _config->wifi.password = getParam("wifiPwd");
-        _config->mqtt.ip       = getParam("mqttServerIp");
-        _config->mqtt.user     = getParam("mqttUser");
-        _config->mqtt.password = getParam("mqttPwd");
-        _config->write();
+        Serial.println(request->contentType());
+        int params = request->params();
+        #ifdef DEBUG
+        Serial.printf("%d params sent in\n", params);
+        for (int i = 0; i < params; i++)
+        {
+            const AsyncWebParameter *p = request->getParam(i);
+            if (p->isPost())
+            {
+                Serial.printf("%s: %s \n", p->name().c_str(), p->value().c_str());
+            }
+            else
+            {
+                Serial.println("No post param");
+                Serial.printf("_GET[%s]: %s", p->name().c_str(), p->value().c_str());
+            }
+        }
+        #endif
 
-        AsyncResponseStream* response = request->beginResponseStream("application/json");
-        JsonDocument doc;
-        _config->toJson(doc);
+        StirrerConfig stirrerConfig;
+        const char* missing = stirrerConfig.applyForm([request](const char* name, String& value) {
+            const AsyncWebParameter* p = request->getParam(name, true);
+            if (p == nullptr) {
+                return false;
+            }
+            value = p->value();
+            return true;
+        });
+        if (missing != nullptr) {
+            request->send(400, "text/plain", String("Missing ") + missing + " parameter");
+            return;
+        }
+
+        stirrerConfig.write();
+        JsonDocument doc = stirrerConfig.toJson();
+        AsyncResponseStream *response = request->beginResponseStream("application/json");
         serializeJson(doc, *response);
         request->send(response);
     });
