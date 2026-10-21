@@ -7,7 +7,7 @@
 
 // Publishes stirrer state to "stirrer/<id>/<subtopic>".
 // All topics are retained, so subscribers get the last state immediately.
-// Config, speed and temperature are (re)published on every (re)connect.
+// Status, ip, config, speed and temperature are (re)published on every (re)connect.
 class MqttHandler{
     public:
         MqttHandler(const char* stirrerId, StirrerConfig * stirrerConfigPointer);
@@ -18,7 +18,7 @@ class MqttHandler{
         void publishIp();
         // config without passwords as json
         void publishConfig();
-        // stirrer pwm value 0-255
+        // measured stirrer speed in rpm, only publishes when it changed
         void publishSpeed(int speed);
         // only publishes when it changed by at least TEMPERATURE_THRESHOLD
         void publishTemperature(float temperature);
@@ -31,6 +31,7 @@ class MqttHandler{
         WiFiClient wifiClient;
         PubSubClient client;
         unsigned long lastReconnectAttempt;
+        String status;
         int speed;
         bool hasTemperature;
         float temperature;

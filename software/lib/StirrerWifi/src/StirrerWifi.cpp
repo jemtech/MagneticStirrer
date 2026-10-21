@@ -5,14 +5,9 @@
 
 // Baut den Hostnamen aus stirrerId oder MAC-Adresse
 static void buildHostname(char* buf, size_t len, const char* stirrerId) {
-    if (strlen(stirrerId) > 0) {
-        snprintf(buf, len, "esp32stirrer_%s", stirrerId);
-    } else {
-        byte mac[6];
-        WiFi.macAddress(mac);
-        snprintf(buf, len, "esp32stirrer_%02X_%02X_%02X_%02X_%02X_%02X",
-                 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
+    byte mac[6];
+    WiFi.macAddress(mac);
+    buildHostName(buf, len, stirrerId, mac);
 }
 
 void StirrerWifi::setup(WifiConfig* wifiConfigPointer, const char* stirrerId) {
@@ -44,7 +39,7 @@ void StirrerWifi::setup(WifiConfig* wifiConfigPointer, const char* stirrerId) {
         #ifdef DEBUG
         Serial.print(".");
         #endif
-        if(wifiTries >= 10){
+        if (wifiTries >= 10) {
             fallBackAP();
             return;
         }
@@ -64,10 +59,8 @@ void StirrerWifi::setupMdns(const char* stirrerId) {
     // ".lan"-Auflösung läuft über Router-DNS, nicht über mDNS.
     // MDNS.begin() bekommt den Hostnamen OHNE TLD.
     char host[128];
-    byte mac[6];
-    WiFi.macAddress(mac);
-    buildMdnsHostName(host, sizeof(host), stirrerId, mac);
-    /*use mdns for host name resolution*/
+    buildHostname(host, sizeof(host), stirrerId);
+
     if (!MDNS.begin(host)) {
         #ifdef DEBUG
         Serial.println("Error setting up MDNS: " + String(host));
@@ -79,12 +72,7 @@ void StirrerWifi::setupMdns(const char* stirrerId) {
     #endif
 }
 
-void StirrerWifi::fallBackAP(void){
-    #ifdef DEBUG
-    Serial.println();
-    Serial.println("Start fall back AP");
-    #endif
-
+void StirrerWifi::fallBackAP() {
     byte mac[6];
     WiFi.macAddress(mac);
     char apSsid[64];

@@ -4,7 +4,45 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 #include <string>
+
+// Arduino mock for the PlatformIO native tests.
+
+typedef uint8_t byte;
+typedef bool    boolean;
+
+#define INPUT        0
+#define OUTPUT       1
+#define INPUT_PULLUP 2
+#define HIGH         1
+#define LOW          0
+#define CHANGE       1
+#define FALLING      2
+#define RISING       3
+#define IRAM_ATTR
+
+#define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+
+// Values returned by the hardware stubs, set by the tests.
+inline int           mock_analogRead_value  = 0;
+inline int           mock_digitalRead_value = 0;
+inline unsigned long mock_millis_value      = 0;
+inline unsigned long mock_micros_value      = 0;
+
+inline int           analogRead(int)        { return mock_analogRead_value; }
+inline int           digitalRead(int)       { return mock_digitalRead_value; }
+inline void          pinMode(int, int)      {}
+inline void          digitalWrite(int, int) {}
+inline void          delay(unsigned long)   {}
+inline unsigned long millis()               { return mock_millis_value; }
+inline unsigned long micros()               { return mock_micros_value; }
+inline void          noInterrupts()         {}
+inline void          interrupts()           {}
+inline int           digitalPinToInterrupt(int pin) { return pin; }
+inline void          attachInterrupt(int, void (*)(), int) {}
+inline bool          ledcAttach(int, unsigned long, int)   { return true; }
+inline bool          ledcWrite(int, int)                    { return true; }
 
 class String {
 public:

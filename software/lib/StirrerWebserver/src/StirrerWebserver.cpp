@@ -40,42 +40,25 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         #ifdef DEBUG
         Serial.println("POST /config.html");
         #endif
-        Serial.println(request->contentType());
-        int params = request->params();
-        #ifdef DEBUG
-        Serial.printf("%d params sent in\n", params);
-        for (int i = 0; i < params; i++)
-        {
-            const AsyncWebParameter *p = request->getParam(i);
-            if (p->isPost())
-            {
-                Serial.printf("%s: %s \n", p->name().c_str(), p->value().c_str());
-            }
-            else
-            {
-                Serial.println("No post param");
-                Serial.printf("_GET[%s]: %s", p->name().c_str(), p->value().c_str());
-            }
-        }
-        #endif
-
-        StirrerConfig stirrerConfig;
-        const char* missing = stirrerConfig.applyForm([request](const char* name, String& value) {
+        WifiConfig oldWifi = _config->wifi;
+        MqttConfig oldMqtt = _config->mqtt;
+        const char* missing = _config->applyForm([request](const char* name, String& value) {
             const AsyncWebParameter* p = request->getParam(name, true);
-            if (p == nullptr) {
-                return false;
-            }
+            if (p == nullptr) return false;
             value = p->value();
             return true;
         });
         if (missing != nullptr) {
+            // applyForm may have updated some fields already
+            _config->wifi = oldWifi;
+            _config->mqtt = oldMqtt;
             request->send(400, "text/plain", String("Missing ") + missing + " parameter");
             return;
         }
+        _config->write();
 
-        stirrerConfig.write();
-        JsonDocument doc = stirrerConfig.toJson();
-        AsyncResponseStream *response = request->beginResponseStream("application/json");
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        JsonDocument doc = _config->toPublicJson();
         serializeJson(doc, *response);
         request->send(response);
     });
@@ -86,8 +69,7 @@ void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
         Serial.println("GET /api/config.json");
         #endif
         AsyncResponseStream* response = request->beginResponseStream("application/json");
-        JsonDocument doc;
-        _config->toJson(doc);
+        JsonDocument doc = _config->toJson();
         serializeJson(doc, *response);
         request->send(response);
     });

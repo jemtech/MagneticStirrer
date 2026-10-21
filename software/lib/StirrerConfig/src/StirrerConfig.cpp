@@ -30,15 +30,15 @@ void StirrerConfig::loadWifi() {
         writeWifi();
         preferences.begin("wifi", RO_MODE);
     }
-    wifi.ssid = preferences.getString("ssid");
+    wifi.ssid     = preferences.getString("ssid");
     wifi.password = preferences.getString("password");
     preferences.end();
 }
 
-void StirrerConfig::loadMqtt(){
+void StirrerConfig::loadMqtt() {
     preferences.begin("mqtt", RO_MODE);
-    bool ipExsist = preferences.isKey("ip");
-    if (ipExsist == false) {
+    bool exists = preferences.isKey("ip");
+    if (!exists) {
         preferences.end();
         #ifdef DEBUG
         Serial.println("loadMqtt: no key, writing defaults");
@@ -49,8 +49,8 @@ void StirrerConfig::loadMqtt(){
         writeMqtt();
         preferences.begin("mqtt", RO_MODE);
     }
-    mqtt.ip = preferences.getString("ip");
-    mqtt.user = preferences.getString("user");
+    mqtt.ip       = preferences.getString("ip");
+    mqtt.user     = preferences.getString("user");
     mqtt.password = preferences.getString("password");
     preferences.end();
 }
@@ -63,16 +63,7 @@ void StirrerConfig::loadControl() {
         #ifdef DEBUG
         Serial.println("loadControl: no key, writing defaults");
         #endif
-        control.targetTemp    = 25.0;
-        control.tempPlateMax  = 300.0;
-        control.targetRpm     = 300.0;
-        control.maxRpm        = 1500.0;
-        control.useExtSensor  = false;
-        control.heaterEnabled = false;
-        control.motorEnabled  = false;
-        control.pidPlate  = { 5.0, 0.2, 2.0 };
-        control.pidExt    = { 3.0, 0.5, 1.0 };
-        control.pidMotor  = { 0.5, 0.1, 0.05 };
+        control = StirrerControlConfig();
         writeControl();
         preferences.begin("control", RO_MODE);
     }
@@ -107,32 +98,23 @@ void StirrerConfig::write() {
     #endif
 }
 
-void StirrerConfig::writeWifi(){
-    preferences.begin("wifi", RW_MODE); // read and write
+void StirrerConfig::writeWifi() {
+    preferences.begin("wifi", RW_MODE);
     #ifdef DEBUG
-    Serial.println("write wifi");
     Serial.printf("write ssid:\"%s\"\n", wifi.ssid.c_str());
     #endif
-    preferences.putString("ssid", wifi.ssid);
-    #ifdef DEBUG
-    Serial.printf("read ssid:\"%s\"\n", preferences.getString("ssid").c_str());
-    Serial.printf("write password:\"%s\"\n", wifi.password.c_str());
-    #endif
+    preferences.putString("ssid",     wifi.ssid);
     preferences.putString("password", wifi.password);
-    #ifdef DEBUG
-    Serial.printf("read password:\"%s\"\n", preferences.getString("password").c_str());
-    #endif
     preferences.end();
 }
 
-void StirrerConfig::writeMqtt(){
+void StirrerConfig::writeMqtt() {
     preferences.begin("mqtt", RW_MODE);
     #ifdef DEBUG
-    Serial.println("write mqtt");
-    Serial.printf("write ip:\"%s\"\n", mqtt.ip.c_str());
+    Serial.printf("write mqtt ip:\"%s\"\n", mqtt.ip.c_str());
     #endif
-    preferences.putString("ip", mqtt.ip);
-    preferences.putString("user", mqtt.user);
+    preferences.putString("ip",       mqtt.ip);
+    preferences.putString("user",     mqtt.user);
     preferences.putString("password", mqtt.password);
     preferences.end();
 }
@@ -158,7 +140,8 @@ void StirrerConfig::writeControl() {
     preferences.end();
 }
 
-void StirrerConfig::toJson(JsonDocument& doc) {
+JsonDocument StirrerConfig::toJson() {
+    JsonDocument doc;
 
     JsonObject wifiObj = doc["wifi"].to<JsonObject>();
     wifiObj["ssid"]     = wifi.ssid;
@@ -193,17 +176,17 @@ void StirrerConfig::toJson(JsonDocument& doc) {
     pidMotor["ki"] = control.pidMotor.ki;
     pidMotor["kd"] = control.pidMotor.kd;
 
+    return doc;
 }
 
-JsonDocument StirrerConfig::toPublicJson(){
+JsonDocument StirrerConfig::toPublicJson() {
     JsonDocument doc = toJson();
     doc["wifi"].remove("password");
     doc["mqtt"].remove("password");
     return doc;
 }
 
-
-const char* StirrerConfig::applyForm(const FormLookup& lookup){
+const char* StirrerConfig::applyForm(const FormLookup& lookup) {
     struct Field { const char* name; String* target; };
     Field fields[] = {
         {"wifiSsid", &wifi.ssid},

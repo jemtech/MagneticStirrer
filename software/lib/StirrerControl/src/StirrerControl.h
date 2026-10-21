@@ -16,10 +16,6 @@
 #define PID_MOTOR_INTERVAL_MS 200
 #define TEMP_PLATE_MAX    350.0
 
-// ── PWM channels ────────────────────────────────────────────
-#define PWM_CHANNEL_MOTOR   0
-#define PWM_CHANNEL_HEATER  1
-
 // ── Kick-Start Dauer ─────────────────────────────────────────
 #define MOTOR_KICKSTART_MS  150
 

@@ -1,12 +1,6 @@
 #include <unity.h>
-#include "../mocks/ArduinoMock.h"
+#include <Arduino.h>
 #include "NTCSensor.h"
-
-// Mock-Werte
-int           mock_analogRead_value  = 2048;
-int           mock_digitalRead_value = LOW;
-unsigned long mock_millis_value      = 0;
-unsigned long mock_micros_value      = 0;
 
 // ── Hilfsfunktion ────────────────────────────────────────────
 // Calculates expected ADC value for a given temperature

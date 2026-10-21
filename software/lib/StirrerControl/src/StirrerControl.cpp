@@ -20,12 +20,10 @@ void StirrerControl::setup(StirrerConfig* config) {
     attachInterrupt(digitalPinToInterrupt(PIN_HALL), isrHall, FALLING);
 
     // Motor MOSFET - 20kHz for smooth operation
-    ledcSetup(PWM_CHANNEL_MOTOR,  20000, 8);
-    ledcAttachPin(PIN_MOTOR,  PWM_CHANNEL_MOTOR);
+    ledcAttach(PIN_MOTOR,  20000, 8);
 
     // Heater SSR - 2Hz sufficient due to thermal inertia
-    ledcSetup(PWM_CHANNEL_HEATER, 2, 8);
-    ledcAttachPin(PIN_HEATER, PWM_CHANNEL_HEATER);
+    ledcAttach(PIN_HEATER, 2, 8);
 
     // Temperatur PID
     _pidTempSetpoint = _config->control.targetTemp;
@@ -106,12 +104,12 @@ float StirrerControl::getRpm() {
 }
 
 void StirrerControl::setHeater(int value) {
-    ledcWrite(PWM_CHANNEL_HEATER, constrain(value, 0, 255));
+    ledcWrite(PIN_HEATER, constrain(value, 0, 255));
 }
 
 void StirrerControl::setMotor(int value) {
     if (value <= 0) {
-        ledcWrite(PWM_CHANNEL_MOTOR, 0);
+        ledcWrite(PIN_MOTOR, 0);
         _motorWasOff   = true;
         _motorKickStart = 0;
         return;
@@ -120,7 +118,7 @@ void StirrerControl::setMotor(int value) {
     // FIX #2: Nicht-blockierender Kick-Start – kein delay() mehr
     if (_motorWasOff) {
         // Kick-Start beginnen: Vollgas und Timestamp merken
-        ledcWrite(PWM_CHANNEL_MOTOR, 255);
+        ledcWrite(PIN_MOTOR, 255);
         _motorKickStart = millis();
         _motorWasOff    = false;
         return;  // Erst beim nächsten update()-Aufruf weiter
@@ -136,7 +134,7 @@ void StirrerControl::setMotor(int value) {
         _pidMotor.SetMode(AUTOMATIC);
     }
 
-    ledcWrite(PWM_CHANNEL_MOTOR, constrain(value, 0, 255));
+    ledcWrite(PIN_MOTOR, constrain(value, 0, 255));
 }
 
 void StirrerControl::applyTempPidConfig() {

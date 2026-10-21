@@ -1,14 +1,14 @@
 #include "StirrerDisplay.h"
 
 StirrerDisplay::StirrerDisplay() {
-    this->lcd = new hd44780_pinIO(rs, en, db4, db5, db6, db7);e17ec124b365187021bb774abbfaa267
+    this->lcd = new hd44780_pinIO(rs, en, db4, db5, db6, db7);
 }
 
 StirrerDisplay::~StirrerDisplay() {
     delete lcd;
 }
 
-void StirrerDisplay::setup(){
+void StirrerDisplay::setup() {
     pinMode(rs, OUTPUT);
     pinMode(en, OUTPUT);
     pinMode(db4, OUTPUT);

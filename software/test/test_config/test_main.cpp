@@ -24,12 +24,18 @@ void test_public_json_omits_passwords(void) {
     config.mqtt.password = "mqtt-pw";
 
     JsonDocument doc = config.toPublicJson();
+
+    TEST_ASSERT_EQUAL_STRING("my-network", doc["wifi"]["ssid"]);
+    TEST_ASSERT_FALSE(doc["wifi"]["password"].is<const char*>());
+    TEST_ASSERT_EQUAL_STRING("192.168.1.10", doc["mqtt"]["ip"]);
+    TEST_ASSERT_EQUAL_STRING("stirrer", doc["mqtt"]["user"]);
+    TEST_ASSERT_FALSE(doc["mqtt"]["password"].is<const char*>());
+    TEST_ASSERT_EQUAL_FLOAT(25.0f, doc["control"]["targetTemp"].as<float>());
+
     std::string out;
     serializeJson(doc, out);
-
-    TEST_ASSERT_EQUAL_STRING(
-        "{\"wifi\":{\"ssid\":\"my-network\"},\"mqtt\":{\"ip\":\"192.168.1.10\",\"user\":\"stirrer\"}}",
-        out.c_str());
+    TEST_ASSERT_TRUE(out.find("s3cret") == std::string::npos);
+    TEST_ASSERT_TRUE(out.find("mqtt-pw") == std::string::npos);
 }
 
 void test_load_without_stored_config_uses_empty_defaults(void) {
@@ -127,10 +133,11 @@ void test_to_json_serializes_to_expected_json(void) {
     config.mqtt.user = "u";
     config.mqtt.password = "p";
 
+    std::string json = toJsonString(config);
     TEST_ASSERT_EQUAL_STRING(
         "{\"wifi\":{\"ssid\":\"net\",\"password\":\"pw\"},"
-        "\"mqtt\":{\"ip\":\"10.0.0.1\",\"user\":\"u\",\"password\":\"p\"}}",
-        toJsonString(config).c_str());
+        "\"mqtt\":{\"ip\":\"10.0.0.1\",\"user\":\"u\",\"password\":\"p\"},",
+        json.substr(0, json.find("\"control\"")).c_str());
 }
 
 void test_special_characters_survive_roundtrip_and_json(void) {

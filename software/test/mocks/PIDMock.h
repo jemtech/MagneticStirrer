@@ -1,6 +1,11 @@
 #pragma once
 
 // Minimaler PID Mock
+#define DIRECT    0
+#define REVERSE   1
+#define MANUAL    0
+#define AUTOMATIC 1
+
 class PID {
 public:
     PID(double* input, double* output, double* setpoint,

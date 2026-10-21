@@ -1,23 +1,17 @@
 #include <unity.h>
-#include "../mocks/ArduinoMock.h"
-#include "../mocks/PreferencesMock.h"
-#include "../mocks/ArduinoJsonMock.h"
-#include "../mocks/StirrerDisplayMock.h"
+#include <Arduino.h>
+#include <Preferences.h>
+#include <StirrerDisplay.h>
+#define private public  // tests set the private ISR state
 #include "StirrerEncoder.h"
-
-int           mock_analogRead_value  = 0;
-int           mock_digitalRead_value = HIGH;  // Button not pressed
-unsigned long mock_millis_value      = 0;
-unsigned long mock_micros_value      = 0;
-
-volatile int  StirrerEncoder::_isrSteps    = 0;
-volatile long StirrerEncoder::_lastIsrTime = 0;
+#undef private
 
 StirrerConfig  cfg;
 StirrerDisplay display;
 
 void setUp() {
-    Preferences::clearAll();
+    Preferences::resetAll();
+    mock_digitalRead_value = HIGH;  // Button not pressed
     cfg.load();
     cfg.control.targetTemp    = 100.0f;
     cfg.control.targetRpm     = 300.0f;

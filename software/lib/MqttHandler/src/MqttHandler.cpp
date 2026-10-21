@@ -1,15 +1,14 @@
 #include <MqttHandler.h>
 #include <WiFi.h>
 
-#define DEBUG
 #define MQTT_PORT 1883
 #define RECONNECT_INTERVAL 5000 // ms
 #define TEMPERATURE_THRESHOLD 0.1 // °C
-#define CONFIG_BUFFER_SIZE 512
+#define CONFIG_BUFFER_SIZE 1024 // config json incl. control + pid values
 
 MqttHandler::MqttHandler(const char* stirrerId, StirrerConfig * stirrerConfigPointer)
     : stirrerId(stirrerId), stirrerConfig(stirrerConfigPointer), client(wifiClient),
-      lastReconnectAttempt(0), speed(0), hasTemperature(false), temperature(0){
+      lastReconnectAttempt(0), status(), speed(0), hasTemperature(false), temperature(0){
     client.setBufferSize(CONFIG_BUFFER_SIZE);
 }
 
@@ -48,6 +47,10 @@ bool MqttHandler::reconnect(){
 
 // state that has to be on the broker after every (re)connect
 void MqttHandler::publishState(){
+    // replaces the retained "offline" will from a previous connection
+    if (status.length() > 0) {
+        publish("status", status.c_str(), true);
+    }
     publishIp();
     publishConfig();
     publish("speed", String(speed).c_str(), true);
@@ -71,6 +74,7 @@ void MqttHandler::publish(const char* subTopic, const char* payload, bool retain
 }
 
 void MqttHandler::publishStatus(const char* status){
+    this->status = status;
     publish("status", status, true);
 }
 
@@ -86,6 +90,7 @@ void MqttHandler::publishConfig(){
 }
 
 void MqttHandler::publishSpeed(int speed){
+    if (speed == this->speed) return;
     this->speed = speed;
     publish("speed", String(speed).c_str(), true);
 }

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <cstdio>
 #include <Arduino.h>
 
 class Preferences {
@@ -33,6 +34,14 @@ public:
         return value.length();
     }
 
+    size_t putFloat(const char* key, float value)   { return putNumber(key, value); }
+    size_t putDouble(const char* key, double value) { return putNumber(key, value); }
+    size_t putBool(const char* key, bool value)     { return putNumber(key, value ? 1 : 0); }
+
+    float getFloat(const char* key, float defaultValue = 0)    { return (float)getNumber(key, defaultValue); }
+    double getDouble(const char* key, double defaultValue = 0) { return getNumber(key, defaultValue); }
+    bool getBool(const char* key, bool defaultValue = false)   { return getNumber(key, defaultValue ? 1 : 0) != 0; }
+
     bool clear() {
         if (!open_ || readOnly_) return false;
         store()[ns_].clear();
@@ -43,6 +52,20 @@ public:
     static void resetAll() { store().clear(); }
 
 private:
+    size_t putNumber(const char* key, double value) {
+        if (!open_ || readOnly_) return 0;
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%.17g", value);
+        store()[ns_][key] = buf;
+        return sizeof(double);
+    }
+    double getNumber(const char* key, double defaultValue) {
+        if (!open_) return defaultValue;
+        auto& space = store()[ns_];
+        auto it = space.find(key);
+        return it == space.end() ? defaultValue : std::stod(it->second);
+    }
+
     static std::map<std::string, std::map<std::string, std::string>>& store() {
         static std::map<std::string, std::map<std::string, std::string>> s;
         return s;

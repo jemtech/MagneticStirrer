@@ -1,14 +1,11 @@
 #include <unity.h>
-#include "../mocks/ArduinoMock.h"
-#include "../mocks/PreferencesMock.h"
-#include "../mocks/ArduinoJsonMock.h"
-#include "../mocks/PIDMock.h"
+#include <Arduino.h>
+#include <Preferences.h>
+#include <PID_v1.h>
+#define private public  // tests set the private ISR state
 #include "StirrerControl.h"
+#undef private
 
-int           mock_analogRead_value  = 2048;
-int           mock_digitalRead_value = LOW;
-unsigned long mock_millis_value      = 0;
-unsigned long mock_micros_value      = 0;
 
 // Helper: calculate ADC value for a given temperature
 int tempToAdc(float tempC) {
@@ -21,7 +18,9 @@ int tempToAdc(float tempC) {
 StirrerConfig cfg;
 
 void setUp() {
-    Preferences::clearAll();
+    Preferences::resetAll();
+    mock_analogRead_value  = 2048;
+    mock_digitalRead_value = LOW;
     cfg.load();
     cfg.control.heaterEnabled = false;
     cfg.control.motorEnabled  = false;

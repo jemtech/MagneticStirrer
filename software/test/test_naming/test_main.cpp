@@ -12,40 +12,40 @@ void tearDown(void) {}
 
 void test_hostname_uses_stirrer_id(void) {
     char host[128];
-    buildMdnsHostName(host, sizeof(host), "0", MAC);
-    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0.lan", host);
+    buildHostName(host, sizeof(host), "0", MAC);
+    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0", host);
 }
 
 void test_hostname_falls_back_to_mac_for_empty_id(void) {
     char host[128];
-    buildMdnsHostName(host, sizeof(host), "", MAC);
-    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0A_BC_01_FF_10_9E.lan", host);
+    buildHostName(host, sizeof(host), "", MAC);
+    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0A_BC_01_FF_10_9E", host);
 }
 
 void test_hostname_falls_back_to_mac_for_null_id(void) {
     char host[128];
-    buildMdnsHostName(host, sizeof(host), NULL, MAC);
-    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0A_BC_01_FF_10_9E.lan", host);
+    buildHostName(host, sizeof(host), NULL, MAC);
+    TEST_ASSERT_EQUAL_STRING("esp32stirrer_0A_BC_01_FF_10_9E", host);
 }
 
 void test_hostname_truncates_long_id_and_fits_buffer(void) {
     std::string longId(300, 'x');
     char host[128];
-    buildMdnsHostName(host, sizeof(host), longId.c_str(), MAC);
-    TEST_ASSERT_EQUAL_STRING((std::string("esp32stirrer_") + std::string(110, 'x') + ".lan").c_str(), host);
+    buildHostName(host, sizeof(host), longId.c_str(), MAC);
+    TEST_ASSERT_EQUAL_STRING((std::string("esp32stirrer_") + std::string(110, 'x') + "").c_str(), host);
     TEST_ASSERT_LESS_OR_EQUAL(sizeof(host), strlen(host) + 1);
 }
 
 void test_hostname_never_overflows_small_buffer(void) {
     char host[8];
-    buildMdnsHostName(host, sizeof(host), "abcdef", MAC);
+    buildHostName(host, sizeof(host), "abcdef", MAC);
     TEST_ASSERT_EQUAL_UINT(7, strlen(host));
     TEST_ASSERT_EQUAL_STRING("esp32st", host);
 }
 
 void test_hostname_handles_zero_size_buffer(void) {
     char host[1] = {'z'};
-    buildMdnsHostName(host, 0, "a", MAC);
+    buildHostName(host, 0, "a", MAC);
     TEST_ASSERT_EQUAL_CHAR('z', host[0]);
 }
 

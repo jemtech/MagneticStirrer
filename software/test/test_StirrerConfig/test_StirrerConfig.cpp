@@ -1,16 +1,11 @@
 #include <unity.h>
-#include "../mocks/ArduinoMock.h"
-#include "../mocks/PreferencesMock.h"
-#include "../mocks/ArduinoJsonMock.h"
+#include <Arduino.h>
+#include <Preferences.h>
 #include "StirrerConfig.h"
 
-int           mock_analogRead_value  = 0;
-int           mock_digitalRead_value = 0;
-unsigned long mock_millis_value      = 0;
-unsigned long mock_micros_value      = 0;
 
 void setUp() {
-    Preferences::clearAll();
+    Preferences::resetAll();
 }
 void tearDown() {}
 
