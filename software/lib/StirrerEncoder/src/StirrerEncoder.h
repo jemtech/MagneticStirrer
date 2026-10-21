@@ -1,7 +1,5 @@
 #pragma once
 #include <Arduino.h>
-#include "StirrerConfig.h"
-#include "StirrerDisplay.h"
 
 // ── Pin-Definitionen ─────────────────────────────────────────
 #define PIN_ENC_CLK   32
@@ -13,28 +11,20 @@
 #define BTN_DEBOUNCE_MS  50
 #define LONGPRESS_MS     800
 
-// ── Schrittweiten ────────────────────────────────────────────
-#define STEP_TEMP     1.0f
-#define STEP_RPM      10
-#define STEP_TEMPMAX  5.0f
-
-enum EncoderParam {
-    PARAM_STATUS = 0,
-    PARAM_TARGET_TEMP,
-    PARAM_TARGET_RPM,
-    PARAM_TEMP_MAX,
-    PARAM_SENSOR_MODE,
-    PARAM_HEATER,
-    PARAM_MOTOR,
-    PARAM_COUNT
+enum EncoderPress {
+    PRESS_NONE = 0,
+    PRESS_SHORT,
+    PRESS_LONG
 };
 
+// Push and turn input only, knows nothing about config or display.
 class StirrerEncoder {
 public:
-    void setup(StirrerConfig* config, StirrerDisplay* display);
-    void update();
-    void updateSensorValues(float tempPlate, float tempExt,
-                            bool extConnected, float rpm);
+    void setup();
+    // steps turned since the last call, positive = clockwise
+    int takeSteps();
+    // polls the button, reports a press once it was released
+    EncoderPress takePress();
 
 private:
     // FIX #1: ISR-Variablen sind private (statische private Member
@@ -44,20 +34,6 @@ private:
 
     static void IRAM_ATTR isrEncoder();
 
-    void handleSteps();
-    void handleButton();
-    void applyChange(int dir);
-    void onShortPress();
-    void onLongPress();
-    void updateDisplay();
-
-    StirrerConfig*  _config        = nullptr;
-    StirrerDisplay* _display       = nullptr;
-    EncoderParam    _currentParam  = PARAM_STATUS;
-    bool            _btnPressed    = false;
-    unsigned long   _btnPressTime  = 0;   // FIX #3: unsigned long
-    float           _lastTempPlate = 0;
-    float           _lastTempExt   = 0;
-    float           _lastRpm       = 0;
-    bool            _extConnected  = false;
+    bool          _btnPressed   = false;
+    unsigned long _btnPressTime = 0;   // FIX #3: unsigned long
 };

@@ -3,6 +3,9 @@
 
 class StirrerDisplay {
 public:
+    static constexpr int LCD_COLS = 16;
+    static constexpr int LCD_ROWS = 2;
+
     std::string lastLine1;
     std::string lastLine2;
     int         writeCount = 0;

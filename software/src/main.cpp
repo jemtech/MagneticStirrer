@@ -8,6 +8,7 @@
 #include <StirrerDisplay.h>
 #include <StirrerControl.h>
 #include <StirrerEncoder.h>
+#include <StirrerMenu.h>
 
 
 StirrerConfig    stirrerConfig;
@@ -15,6 +16,7 @@ StirrerWebserver webServer;
 StirrerDisplay   stirrerDisplay;
 StirrerControl   stirrerControl;
 StirrerEncoder   stirrerEncoder;
+StirrerMenu      stirrerMenu;
 StirrerWifi      stirrerWifi;
 MqttHandler*     mqttHandler = nullptr;
 
@@ -82,7 +84,7 @@ void setup(void) {
 
     // Encoder
     log("Starting Enc", "");
-    stirrerEncoder.setup(&stirrerConfig, &stirrerDisplay);
+    stirrerEncoder.setup();
 
     // MQTT
     if (stirrerConfig.mqtt.ip.length() > 0) {
@@ -97,7 +99,8 @@ void setup(void) {
     // Bereit
     log("Ready!", "");
     delay(100);
-    // Encoder zeigt ab jetzt die Statusseite
+    // Menu zeigt ab jetzt die Statusseite
+    stirrerMenu.setup(&stirrerConfig, &stirrerControl, &stirrerEncoder, &stirrerDisplay);
 }
 
 void loop(void) {
@@ -105,13 +108,7 @@ void loop(void) {
 
     stirrerControl.update();
 
-    stirrerEncoder.update();
-    stirrerEncoder.updateSensorValues(
-        stirrerControl.getTempPlate(),
-        stirrerControl.getTempExt(),
-        stirrerControl.isExtConnected(),
-        stirrerControl.getCurrentRpm()
-    );
+    stirrerMenu.update();
 
     if (mqttHandler != nullptr) {
         mqttHandler->loop();
