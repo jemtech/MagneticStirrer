@@ -3,7 +3,7 @@
 #include <WiFiClient.h>
 #include <ArduinoOTA.h>
 #include <StirrerConfig.h>
-/*#include <MqttHandler.h>*/
+#include <MqttHandler.h>
 #include <StirrerWifi.h>
 #include <StirrerWebserver.h>
 #include <StirrerDisplay.h>
@@ -13,7 +13,8 @@
 
 StirrerConfig stirrerConfig;
 unsigned long lastLoop;
-/*MqttHandler * mqttHandlerPointer;*/
+MqttHandler * mqttHandlerPointer = nullptr;
+const char* stirrerId = "0"; // hardcoded to stirrer 0, later use config
 StirrerWebserver webServer;
 StirrerDisplay stirrerDisplay;
 const int stirrerPin = 27;
@@ -47,7 +48,7 @@ void setup(void) {
 
     StirrerWifi stirrerWifi;
     stirrerWifi.setup(&(stirrerConfig.wifi));
-    stirrerWifi.setupMdns("0"); // hardcode to stirrer 0 later use config
+    stirrerWifi.setupMdns(stirrerId);
 
     #ifdef DEBUG
     Serial.println("wifi setup");
@@ -70,9 +71,8 @@ void setup(void) {
     #endif
 
     lastLoop = 0;
-/*
-    if (strlen(sensorConfig.mqtt.ip) > 0) {
-        mqttHandlerPointer = new MqttHandler(sensorConfig.sensor.id, &(sensorConfig.mqtt));
+    if (stirrerConfig.mqtt.ip.length() > 0) {
+        mqttHandlerPointer = new MqttHandler(stirrerId, &(stirrerConfig.mqtt));
 
         mqttHandlerPointer->setup();
         mqttHandlerPointer->publishStatus("booted");
@@ -84,7 +84,6 @@ void setup(void) {
         Serial.println("no mqtt server ip");
     #endif
     }
-*/
   /* setup stirrer hardware*/
   
     pinMode(stirrerPin, OUTPUT);
@@ -119,9 +118,15 @@ void loop(void) {
         stirrerOff();
     }
     
+    if(mqttHandlerPointer != nullptr) {
+        mqttHandlerPointer->loop();
+    }
+
     if(millis() - lastLoop >= 1000) {
         lastLoop = millis();
-        /*mqttHandlerPointer->publishStatus("sleep");*/
+        if(mqttHandlerPointer != nullptr) {
+            mqttHandlerPointer->publishStatus("sleep");
+        }
     }
     delay(1);
 }

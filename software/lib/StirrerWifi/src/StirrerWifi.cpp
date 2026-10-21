@@ -9,7 +9,7 @@
 void StirrerWifi::setup(StirrerConfig::Wifi * wifiConfigPointer) {
     delay(50);
 
-    if (strlen(wifiConfigPointer->ssid) < 1){
+    if (wifiConfigPointer->ssid.length() < 1){
         #ifdef DEBUG
         Serial.println();
         Serial.println("No SSID using Fallback ");

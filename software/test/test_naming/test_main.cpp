@@ -33,7 +33,7 @@ void test_hostname_truncates_long_id_and_fits_buffer(void) {
     char host[128];
     buildMdnsHostName(host, sizeof(host), longId.c_str(), MAC);
     TEST_ASSERT_EQUAL_STRING((std::string("esp32stirrer_") + std::string(110, 'x') + ".lan").c_str(), host);
-    TEST_ASSERT_LESS_THAN(sizeof(host), strlen(host) + 1);
+    TEST_ASSERT_LESS_OR_EQUAL(sizeof(host), strlen(host) + 1);
 }
 
 void test_hostname_never_overflows_small_buffer(void) {

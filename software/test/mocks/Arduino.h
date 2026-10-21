@@ -39,6 +39,6 @@ public:
     size_t println(const char* = "") { return 0; }
     int printf(const char*, ...) __attribute__((format(printf, 2, 3))) { return 0; }
 };
-extern MockSerial Serial;
+inline MockSerial Serial;
 
 #endif // MOCK_ARDUINO_H

@@ -1,6 +1,7 @@
 #ifndef StirrerDisplay_H // include guard
 #define StirrerDisplay_H
 
+#include <Arduino.h>
 #include <LiquidCrystal.h>
 
 class StirrerDisplay {
