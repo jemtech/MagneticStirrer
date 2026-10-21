@@ -16,6 +16,8 @@ long int lastLoop;
 /*MqttHandler * mqttHandlerPointer;*/
 StirrerWebserver webServer;
 StirrerDisplay stirrerDisplay;
+const int stirrerPin = 27;
+long int stirrerVal;
 
 /* setup function */
 void setup(void) {
@@ -40,7 +42,8 @@ void setup(void) {
     Serial.println("Display ready");
     #endif
 
-    stirrerDisplay.write("start Wifi");
+    stirrerDisplay.clear();
+    stirrerDisplay.print("start Wifi");
 
     StirrerWifi stirrerWifi;
     stirrerWifi.setup(&(stirrerConfig.wifi));
@@ -50,7 +53,8 @@ void setup(void) {
     Serial.println("wifi setup");
     #endif
 
-    stirrerDisplay.write(stirrerWifi.localIP().toString().c_str());
+    stirrerDisplay.clear();
+    stirrerDisplay.print(stirrerWifi.localIP().toString().c_str());
 
     ArduinoOTA.begin();
 
@@ -81,6 +85,20 @@ void setup(void) {
     }
 */
   /* setup stirrer hardware*/
+  
+    pinMode(stirrerPin, OUTPUT);
+    stirrerVal = 0;
+}
+
+
+void stirrerOn(int value){
+    if(value == stirrerVal) return;
+    stirrerVal = value;
+    analogWrite(stirrerPin, value);
+}
+
+void stirrerOff(){
+    stirrerOn(0);
 }
 
 /* main loop */
@@ -88,9 +106,22 @@ void loop(void) {
     /* check for software update */
     ArduinoOTA.handle(); 
 
-    if(1 < millis() - lastLoop) {
+    if(2000 < millis() && 4000 > millis()) {
+        stirrerOn(127);
+    } else if(40000 < millis() && 6000 > millis()) {
+        stirrerOn(180);
+    } else if(60000 < millis() && 8000 > millis()) {
+        stirrerOn(220);
+    } else if(80000 < millis() && 10000 > millis()) {
+        stirrerOn(255);
+    } else {
+        stirrerOff();
+    }
+    
+    if(1000 < millis() - lastLoop) {
         lastLoop = millis();
         /*mqttHandlerPointer->publishStatus("sleep");*/
+        stirrerDisplay.print("Test");
     }
     delay(1);
 }
