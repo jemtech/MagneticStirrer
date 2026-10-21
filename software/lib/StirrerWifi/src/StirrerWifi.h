@@ -1,15 +1,13 @@
-#ifndef STIRRERWIFI_H // include guard
-#define STIRRERWIFI_H
-
+#pragma once
 #include <StirrerConfig.h>
 
-class StirrerWifi{
-    public:
-        void setup(StirrerConfig::Wifi * wifiConfigPointer);
-        void setupMdns(const char* stirrerId);
-        IPAddress localIP();
-    private:
-        void fallBackAP(void);
+class StirrerWifi {
+public:
+    // stirrerId wird vor WiFi.begin() als DHCP-Hostname gesetzt,
+    // damit der Router ihn als "hostname.lan" registriert.
+    void setup(WifiConfig* wifiConfigPointer, const char* stirrerId);
+    void setupMdns(const char* stirrerId);
+    IPAddress localIP();
+private:
+    void fallBackAP(void);
 };
-
-#endif //STIRRERWIFI_H

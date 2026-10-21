@@ -1,23 +1,28 @@
-#ifndef StirrerDisplay_H // include guard
-#define StirrerDisplay_H
-
+#pragma once
 #include <hd44780.h>
-#include <hd44780ioClass/hd44780_pinIO.h> 
+#include <hd44780ioClass/hd44780_pinIO.h>
 
 class StirrerDisplay {
+public:
+    StirrerDisplay();
+    ~StirrerDisplay();
+    void setup();
+    void write(const char* line1, const char* line2 = "");
+    void clear();
 
-    public:
-        StirrerDisplay();
-        ~StirrerDisplay();
-        void setup();
-        void write(const char* test);
-    private:
-        hd44780_pinIO* lcd;
-        //const int rs=12, en=13, db4=17, db5=16, db6=27, db7=14;
-        const int rs=19, en=23, db4=18, db5=17, db6=26, db7=15;
-        const int LCD_COLS = 16;
-        const int LCD_ROWS = 2;
+    // FIX #10: Konstanten zugänglich für StirrerEncoder (BUF = LCD_COLS + 1)
+    static constexpr int LCD_COLS = 16;
+    static constexpr int LCD_ROWS = 2;
 
+private:
+    void writeLine(uint8_t row, const char* text);
+    hd44780_pinIO* lcd;
+
+    // FIX #9: static constexpr statt const int Member – spart RAM pro Instanz
+    static constexpr int rs  = 19;
+    static constexpr int en  = 23;
+    static constexpr int db4 = 18;
+    static constexpr int db5 = 17;
+    static constexpr int db6 = 16;
+    static constexpr int db7 = 15;
 };
-
-#endif //StirrerDisplay_H

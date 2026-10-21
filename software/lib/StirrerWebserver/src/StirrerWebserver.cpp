@@ -1,106 +1,169 @@
-#include <StirrerWebserver.h>
+#include "StirrerWebserver.h"
 #include <Update.h>
 #include <incbin.h>
 #include <ArduinoJson.h>
-#include <StirrerConfig.h>
 
-#define DEBUG
 
-INCTXT(StyleCss, "lib/StirrerWebserver/src/style.css");
-INCTXT(IndexHtml, "lib/StirrerWebserver/src/index.html");
+INCTXT(StyleCss,   "lib/StirrerWebserver/src/style.css");
+INCTXT(IndexHtml,  "lib/StirrerWebserver/src/index.html");
 INCTXT(ConfigHtml, "lib/StirrerWebserver/src/config.html");
 
-StirrerWebserver::StirrerWebserver(){
+StirrerWebserver::StirrerWebserver() {
     this->myServer = new AsyncWebServer(80);
 }
 
-StirrerWebserver::~StirrerWebserver(){
+StirrerWebserver::~StirrerWebserver() {
     myServer->end();
     delete myServer;
 }
 
-void StirrerWebserver::setup(){
-    /*return login*/
+void StirrerWebserver::setup(StirrerConfig* config, StirrerControl* control) {
+    _config  = config;
+    _control = control;
+
+    // ── Statische Files ──────────────────────────────────────
     myServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        #ifdef DEBUG
-        Serial.println("/");
-        #endif
-        request->send(200, "text/html", (uint8_t *)gIndexHtmlData, gIndexHtmlSize);
+        request->send(200, "text/html", (uint8_t*)gIndexHtmlData, gIndexHtmlSize);
     });
-    /*return login*/
     myServer->on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-        #ifdef DEBUG
-        Serial.println("/index.html");
-        #endif
-        request->send(200, "text/html", (uint8_t *)gIndexHtmlData, gIndexHtmlSize);
+        request->send(200, "text/html", (uint8_t*)gIndexHtmlData, gIndexHtmlSize);
     });
-    /*return style*/
     myServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-        #ifdef DEBUG
-        Serial.println("/style.css");
-        #endif
-        request->send(200, "text/html", (uint8_t *)gStyleCssData, gStyleCssSize);
+        request->send(200, "text/css", (uint8_t*)gStyleCssData, gStyleCssSize);
     });
-    /*return config*/
     myServer->on("/config.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-        #ifdef DEBUG
-        Serial.println("/config.html");
-        #endif
-        request->send(200, "text/html", (uint8_t *)gConfigHtmlData, gConfigHtmlSize);
+        request->send(200, "text/html", (uint8_t*)gConfigHtmlData, gConfigHtmlSize);
     });
-    /*set config*/
-    myServer->on("/config.html", HTTP_POST, [](AsyncWebServerRequest *request) {
+
+    // ── Config speichern (WiFi + MQTT) ───────────────────────
+    myServer->on("/config.html", HTTP_POST, [this](AsyncWebServerRequest *request) {
         #ifdef DEBUG
-        Serial.println("config recieved answer");
+        Serial.println("POST /config.html");
         #endif
-        Serial.println(request->contentType());
-        int params = request->params();
-        #ifdef DEBUG
-        Serial.printf("%d params sent in\n", params);
-        for (int i = 0; i < params; i++)
-        {
-            const AsyncWebParameter *p = request->getParam(i);
-            if (p->isPost())
-            {
-                Serial.printf("%s: %s \n", p->name().c_str(), p->value().c_str());
-            }
-            else
-            {
-                Serial.println("No post param");
-                Serial.printf("_GET[%s]: %s", p->name().c_str(), p->value().c_str());
-            }
-        }
-        #endif
-        
-        StirrerConfig stirrerConfig;
-        const AsyncWebParameter* p = request->getParam("wifiSsid", true);
-        stirrerConfig.wifi.ssid = p->value().c_str();
-        p = request->getParam("wifiPwd", true);
-        stirrerConfig.wifi.password = p->value().c_str();
-        p = request->getParam("mqttServerIp", true);
-        stirrerConfig.mqtt.ip = p->value().c_str();
-        p = request->getParam("mqttUser", true);
-        stirrerConfig.mqtt.user = p->value().c_str();
-        p = request->getParam("mqttPwd", true);
-        stirrerConfig.mqtt.password = p->value().c_str();
-        stirrerConfig.write();
-        stirrerConfig.load();
-        JsonDocument doc = stirrerConfig.toJson();
-        AsyncResponseStream *response = request->beginResponseStream("application/json");
+        auto getParam = [&](const char* name) -> String {
+            const AsyncWebParameter* p = request->getParam(name, true);
+            return p ? p->value() : String("");
+        };
+        _config->wifi.ssid     = getParam("wifiSsid");
+        _config->wifi.password = getParam("wifiPwd");
+        _config->mqtt.ip       = getParam("mqttServerIp");
+        _config->mqtt.user     = getParam("mqttUser");
+        _config->mqtt.password = getParam("mqttPwd");
+        _config->write();
+
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        JsonDocument doc;
+        _config->toJson(doc);
         serializeJson(doc, *response);
         request->send(response);
     });
 
-    myServer->on("/api/config.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // ── Config lesen ─────────────────────────────────────────
+    myServer->on("/api/config.json", HTTP_GET, [this](AsyncWebServerRequest *request) {
         #ifdef DEBUG
-        Serial.println("/api/config.json");
+        Serial.println("GET /api/config.json");
         #endif
-        AsyncResponseStream *response = request->beginResponseStream("application/json");
-        StirrerConfig stirrerConfig;
-        stirrerConfig.load();
-        JsonDocument doc = stirrerConfig.toJson();
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        JsonDocument doc;
+        _config->toJson(doc);
         serializeJson(doc, *response);
         request->send(response);
+    });
+
+    // ── Status lesen (Echtmesswerte) ─────────────────────────
+    myServer->on("/api/status.json", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        #ifdef DEBUG
+        Serial.println("GET /api/status.json");
+        #endif
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        JsonDocument doc;
+
+        // Messwerte
+        doc["tempPlate"]      = _control->getTempPlate();
+        doc["tempExt"]        = _control->getTempExt();
+        doc["extConnected"]   = _control->isExtConnected();
+        doc["pidOutput"]      = _control->getPidOutput();
+        doc["pidMotorOutput"] = _control->getPidMotorOutput();
+        doc["currentRpm"]     = _control->getCurrentRpm();
+
+        // Sollwerte
+        doc["targetTemp"]     = _config->control.targetTemp;
+        doc["tempPlateMax"]   = _config->control.tempPlateMax;
+        doc["targetRpm"]      = _config->control.targetRpm;
+        doc["maxRpm"]         = _config->control.maxRpm;
+        doc["useExtSensor"]   = _config->control.useExtSensor;
+        doc["heaterEnabled"]  = _config->control.heaterEnabled;
+        doc["motorEnabled"]   = _config->control.motorEnabled;
+
+        JsonObject pidPlate = doc["pidPlate"].to<JsonObject>();
+        pidPlate["kp"] = _config->control.pidPlate.kp;
+        pidPlate["ki"] = _config->control.pidPlate.ki;
+        pidPlate["kd"] = _config->control.pidPlate.kd;
+
+        JsonObject pidExt = doc["pidExt"].to<JsonObject>();
+        pidExt["kp"] = _config->control.pidExt.kp;
+        pidExt["ki"] = _config->control.pidExt.ki;
+        pidExt["kd"] = _config->control.pidExt.kd;
+
+        JsonObject pidMotor = doc["pidMotor"].to<JsonObject>();
+        pidMotor["kp"] = _config->control.pidMotor.kp;
+        pidMotor["ki"] = _config->control.pidMotor.ki;
+        pidMotor["kd"] = _config->control.pidMotor.kd;
+
+        serializeJson(doc, *response);
+        request->send(response);
+    });
+
+    // ── Control POST (JSON Body) ──────────────────────────────
+    myServer->onRequestBody([this](AsyncWebServerRequest *request, uint8_t *data,
+                                   size_t len, size_t index, size_t total) {
+        if (request->url() == "/api/control.json" && request->method() == HTTP_POST) {
+            #ifdef DEBUG
+            Serial.println("POST /api/control.json");
+            #endif
+            JsonDocument doc;
+            DeserializationError err = deserializeJson(doc, data, len);
+            if (err) {
+                request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+                return;
+            }
+            if (!doc["targetTemp"].isNull())
+                _config->control.targetTemp    = doc["targetTemp"].as<float>();
+            if (!doc["tempPlateMax"].isNull())
+                _config->control.tempPlateMax  = doc["tempPlateMax"].as<float>();
+            if (!doc["targetRpm"].isNull())
+                _config->control.targetRpm     = doc["targetRpm"].as<float>();
+            if (!doc["maxRpm"].isNull())
+                _config->control.maxRpm        = doc["maxRpm"].as<float>();
+            if (!doc["useExtSensor"].isNull())
+                _config->control.useExtSensor  = doc["useExtSensor"].as<bool>();
+            if (!doc["heaterEnabled"].isNull())
+                _config->control.heaterEnabled = doc["heaterEnabled"].as<bool>();
+            if (!doc["motorEnabled"].isNull())
+                _config->control.motorEnabled  = doc["motorEnabled"].as<bool>();
+            if (!doc["pidPlate"].isNull()) {
+                _config->control.pidPlate.kp = doc["pidPlate"]["kp"].as<double>();
+                _config->control.pidPlate.ki = doc["pidPlate"]["ki"].as<double>();
+                _config->control.pidPlate.kd = doc["pidPlate"]["kd"].as<double>();
+            }
+            if (!doc["pidExt"].isNull()) {
+                _config->control.pidExt.kp = doc["pidExt"]["kp"].as<double>();
+                _config->control.pidExt.ki = doc["pidExt"]["ki"].as<double>();
+                _config->control.pidExt.kd = doc["pidExt"]["kd"].as<double>();
+            }
+            if (!doc["pidMotor"].isNull()) {
+                _config->control.pidMotor.kp = doc["pidMotor"]["kp"].as<double>();
+                _config->control.pidMotor.ki = doc["pidMotor"]["ki"].as<double>();
+                _config->control.pidMotor.kd = doc["pidMotor"]["kd"].as<double>();
+            }
+            _config->write();
+
+            AsyncResponseStream* response = request->beginResponseStream("application/json");
+            JsonDocument resp;
+            resp["ok"] = true;
+            serializeJson(resp, *response);
+            request->send(response);
+        }
     });
 
     myServer->begin();

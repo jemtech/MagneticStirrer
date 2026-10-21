@@ -1,86 +1,72 @@
-<html>
-    <head>
-        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-        <link rel="stylesheet" href="style.css">
-        <script>
-            function loadData(){
-                // load existing config
-                form = $('#config_form')
-                $.ajax({
-                    url: '/api/config.json',
-                    method: 'GET',
-                    success: function(response) {
-                        //var json = $.parseJSON(response);
-                        var wifiConfig = response.wifi;
-                        form.find('#wifiSsid').val(wifiConfig.ssid);
-                        form.find('#wifiPwd').val(wifiConfig.password);
-                        var sensorConfig = response.sensor;
-                        form.find('#sensorId').val(sensorConfig.id);
-                        form.find('#sensorDelayMs').val(sensorConfig.delayMs);
-                        form.find('#sensorBme280Address').val(sensorConfig.bme280Address);
-                        form.find('#sensorMotionDetectorPin').val(sensorConfig.motionDetectorPin);
-                        form.find('#sensorDs18b20Bus').val(sensorConfig.ds18b20Bus);
-                        form.find('#sensorGeigerMuellerPin').val(sensorConfig.geigerMuellerPin);
-                        var mqttConfig = response.mqtt;
-                        form.find('#mqttServerIp').val(mqttConfig.ip);
-                        form.find('#mqttUser').val(mqttConfig.user);
-                        form.find('#mqttPwd').val(mqttConfig.password);
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle errors here
-                        console.error(status, error);
-                    }
-                });
-            }
-            function setupForm(){
-                // IPv4 validation
-                $( ".ip-v4" ).attr("minlength","7");
-                $( ".ip-v4" ).attr("maxlength","15");
-                $( ".ip-v4" ).attr("pattern","^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$");
-                // IPv6 validation
-                $( ".ip-v6" ).attr("pattern","^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$");
-            }
-        </script>
-    </head>
-    <body>
-        <form method='POST' action='#' enctype='application/x-www-form-urlencoded' id='config_form'>
-            <div>
-                <h1>Wifi Login</h1>
-                <label for="wifiSsid">Wifi ssid</label>
-                <input name="wifiSsid" id="wifiSsid" placeholder='ssid' required> 
-                <label for="wifiPwd">Wifi Password</label>
-                <input name="wifiPwd" id="wifiPwd" placeholder=WifiPassword type='Password' required> 
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="topbar">
+        <h1>Configuration</h1>
+        <a href="/index.html">← Back</a>
+    </div>
+
+    <form method="POST" action="/config.html"
+          enctype="application/x-www-form-urlencoded" id="config_form">
+        <div class="card">
+            <div class="card-title">WiFi</div>
+            <div class="form-row">
+                <label for="wifiSsid">SSID</label>
+                <input name="wifiSsid" id="wifiSsid" placeholder="Network name" required>
             </div>
-            <div>
-                <h1>Sensor config</h1>
-                <label for="sensorId">Sensor ID</label>
-                <input name="sensorId" id="sensorId" placeholder='Sensor ID' required>
-                <label for="sensorDelayMs">Delay ms</label>
-                <input name="sensorDelayMs" id="sensorDelayMs" type="number" min="0" max="3600000" placeholder='59000' required>
-                <label for="sensorBme280Address">Bme280Address</label>
-                <input name="sensorBme280Address" id="sensorBme280Address" type="number" min="0" max="127" placeholder='118'>
-                <label for="sensorMotionDetectorPin">MotionDetectorPin</label>
-                <input name="sensorMotionDetectorPin" id="sensorMotionDetectorPin">
-                <label for="sensorDs18b20Bus">Ds18b20Bus</label>
-                <input name="sensorDs18b20Bus" id="sensorDs18b20Bus">
-                <label for="sensorGeigerMuellerPin">GeigerMuellerPin</label>
-                <input name="sensorGeigerMuellerPin" id="sensorGeigerMuellerPin">
+            <div class="form-row">
+                <label for="wifiPwd">Password</label>
+                <input name="wifiPwd" id="wifiPwd" type="password" placeholder="Password">
             </div>
-            <div>
-                <h1>Mqtt config</h1>
-                <label for="mqttServerIp">MQTT Server IP(v4)</label>
-                <input name="mqttServerIp" id="mqttServerIp" placeholder='Server IP' type='text' class="ip-v4" required>
+        </div>
+
+        <div class="card">
+            <div class="card-title">MQTT <span class="optional">(optional)</span></div>
+            <div class="form-row">
+                <label for="mqttServerIp">Server IP</label>
+                <input name="mqttServerIp" id="mqttServerIp"
+                       placeholder="192.168.1.100" class="ip-v4">
+            </div>
+            <div class="form-row">
                 <label for="mqttUser">User</label>
-                <input name="mqttUser" id="mqttUser" placeholder='user'> 
-                <label for="mqttPwd">Password</label>
-                <input name="mqttPwd" id="mqttPwd" placeholder=Password type='Password'> 
+                <input name="mqttUser" id="mqttUser" placeholder="user">
             </div>
-            <br>
-            <input type='submit' class='btn' value='Save'>
-        </form>
-        <script>
-            setupForm();
-            loadData();
-        </script>
-    </body>
+            <div class="form-row">
+                <label for="mqttPwd">Password</label>
+                <input name="mqttPwd" id="mqttPwd" type="password" placeholder="Password">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <input type="submit" class="btn btn-primary" value="Save">
+            <a href="/index.html" class="btn">Cancel</a>
+        </div>
+    </form>
+
+    <script>
+        function loadConfig() {
+            $.ajax({
+                url: '/api/config.json',
+                method: 'GET',
+                success: function(r) {
+                    $('#wifiSsid').val(r.wifi.ssid);
+                    $('#wifiPwd').val(r.wifi.password);
+                    $('#mqttServerIp').val(r.mqtt.ip);
+                    $('#mqttUser').val(r.mqtt.user);
+                    $('#mqttPwd').val(r.mqtt.password);
+                },
+                error: function(xhr) { console.error('config load failed', xhr.status); }
+            });
+        }
+        $('.ip-v4').attr({ minlength: '7', maxlength: '15' });
+        loadConfig();
+    </script>
+</body>
 </html>

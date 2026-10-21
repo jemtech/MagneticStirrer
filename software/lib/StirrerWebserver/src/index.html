@@ -1,9 +1,280 @@
-<html>
-    <head>
-        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <a href="/config.html">Configuration</a>
-    </body>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnetic Stirrer</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="topbar">
+        <h1>Magnetic Stirrer</h1>
+        <a href="/config.html">⚙ Config</a>
+    </div>
+
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-label">Plate temp</div>
+            <div class="metric-value"><span id="tempPlate">--</span><span class="metric-unit">°C</span></div>
+            <div class="metric-sub">target <span id="targetTempDisplay">--</span>°C</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Ext sensor</div>
+            <div class="metric-value"><span id="tempExt">--</span><span class="metric-unit">°C</span></div>
+            <div class="metric-sub" id="extStatus">--</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Heater PID</div>
+            <div class="metric-value"><span id="pidOutput">--</span><span class="metric-unit">%</span></div>
+            <div class="metric-sub" id="heaterStatus">--</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Heater</div>
+        <div class="status-row">
+            <span><span class="dot" id="heaterDot"></span><span id="heaterLabel">--</span></span>
+            <span class="pill" id="sensorPill">--</span>
+        </div>
+        <hr>
+        <div class="row">
+            <label>Target temp</label>
+            <input type="range" id="targetTemp" min="0" max="350" step="1" value="25"
+                   oninput="$('#targetTempVal').text($(this).val()+'°C');$('#targetTempDisplay').text($(this).val())">
+            <span class="val" id="targetTempVal">25°C</span>
+        </div>
+        <div class="row">
+            <label>Safety max</label>
+            <input type="range" id="tempPlateMax" min="50" max="350" step="5" value="300"
+                   oninput="$('#tempPlateMaxVal').text($(this).val()+'°C')">
+            <span class="val" id="tempPlateMaxVal">300°C</span>
+        </div>
+        <div class="btn-row">
+            <button id="btnHeater" class="btn" onclick="toggleHeater()">--</button>
+            <button id="btnSensor" class="btn" onclick="toggleSensor()">--</button>
+            <button class="btn btn-primary" onclick="applyHeater()">Apply</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Motor</div>
+        <div class="status-row">
+            <span><span class="dot" id="motorDot"></span><span id="motorLabel">--</span></span>
+        </div>
+        <div class="rpm-metrics">
+            <div class="rpm-metric">
+                <div class="rpm-label">Target RPM</div>
+                <div class="rpm-value"><span id="targetRpmDisplay">--</span><span class="rpm-unit"> rpm</span></div>
+            </div>
+            <div class="rpm-metric">
+                <div class="rpm-label">Current RPM</div>
+                <div class="rpm-value"><span id="currentRpm">--</span><span class="rpm-unit"> rpm</span></div>
+            </div>
+            <div class="rpm-metric">
+                <div class="rpm-label">Motor PID</div>
+                <div class="rpm-value"><span id="pidMotorOutput">--</span><span class="rpm-unit"> %</span></div>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <label>Target RPM</label>
+            <input type="range" id="targetRpm" min="0" max="1500" step="10" value="300"
+                   oninput="$('#targetRpmVal').text($(this).val()+' rpm');$('#targetRpmDisplay').text($(this).val())">
+            <span class="val" id="targetRpmVal">300 rpm</span>
+        </div>
+        <div class="btn-row">
+            <button id="btnMotor" class="btn" onclick="toggleMotor()">--</button>
+            <button class="btn btn-primary" onclick="applyMotor()">Apply</button>
+            <button class="btn" onclick="calibrateMotor()">Measure max RPM</button>
+        </div>
+        <div id="calibResult" class="calib-result"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">PID parameters</div>
+        <div class="pid-mode" id="pidMode">Active mode: --</div>
+        <div class="pid-grid">
+            <div class="pid-item"><label>Kp</label><input type="number" id="pidKp" step="0.1"></div>
+            <div class="pid-item"><label>Ki</label><input type="number" id="pidKi" step="0.1"></div>
+            <div class="pid-item"><label>Kd</label><input type="number" id="pidKd" step="0.1"></div>
+        </div>
+        <div class="card-title" style="margin-top:14px;">Motor PID</div>
+        <div class="pid-grid">
+            <div class="pid-item"><label>Kp</label><input type="number" id="pidMotorKp" step="0.1"></div>
+            <div class="pid-item"><label>Ki</label><input type="number" id="pidMotorKi" step="0.1"></div>
+            <div class="pid-item"><label>Kd</label><input type="number" id="pidMotorKd" step="0.01"></div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="applyPid()">Save PID</button>
+        </div>
+    </div>
+
+    <script>
+        var state = {};
+
+        // ── Toggle ───────────────────────────────────────────
+        function toggleHeater() {
+            state.heaterEnabled = !state.heaterEnabled;
+            updateHeaterUI();
+        }
+        function toggleSensor() {
+            state.useExtSensor = !state.useExtSensor;
+            updateSensorUI();
+        }
+        function toggleMotor() {
+            state.motorEnabled = !state.motorEnabled;
+            updateMotorUI();
+        }
+
+        // ── Apply ────────────────────────────────────────────
+        function applyHeater() {
+            postControl({
+                targetTemp:    parseFloat($('#targetTemp').val()),
+                tempPlateMax:  parseFloat($('#tempPlateMax').val()),
+                heaterEnabled: state.heaterEnabled,
+                useExtSensor:  state.useExtSensor
+            });
+        }
+        function applyMotor() {
+            postControl({
+                targetRpm:    parseFloat($('#targetRpm').val()),
+                motorEnabled: state.motorEnabled
+            });
+        }
+        function applyPid() {
+            var pidKey = state.useExtSensor ? 'pidExt' : 'pidPlate';
+            var payload = {};
+            payload[pidKey] = {
+                kp: parseFloat($('#pidKp').val()),
+                ki: parseFloat($('#pidKi').val()),
+                kd: parseFloat($('#pidKd').val())
+            };
+            payload.pidMotor = {
+                kp: parseFloat($('#pidMotorKp').val()),
+                ki: parseFloat($('#pidMotorKi').val()),
+                kd: parseFloat($('#pidMotorKd').val())
+            };
+            postControl(payload);
+        }
+
+        function postControl(data) {
+            $.ajax({
+                url: '/api/control.json',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function() { loadStatus(); },
+                error: function(xhr) { console.error('POST failed', xhr.status); }
+            });
+        }
+
+        // ── Kalibrierung ─────────────────────────────────────
+        function calibrateMotor() {
+            $('#calibResult').text('Measuring... full speed for 3s');
+            postControl({ motorEnabled: true, targetRpm: 9999 });
+            setTimeout(function() {
+                $.ajax({
+                    url: '/api/status.json',
+                    method: 'GET',
+                    success: function(r) {
+                        var maxRpm = Math.round(r.currentRpm);
+                        $('#calibResult').text('Max RPM: ' + maxRpm + ' – saved');
+                        postControl({ maxRpm: maxRpm });
+                        $('#targetRpm').attr('max', maxRpm);
+                    }
+                });
+            }, 3000);
+        }
+
+        // ── Status polling ───────────────────────────────────
+        function loadStatus() {
+            $.ajax({
+                url: '/api/status.json',
+                method: 'GET',
+                success: function(r) {
+                    state = r;
+
+                    // Metric cards
+                    $('#tempPlate').text(parseFloat(r.tempPlate).toFixed(1));
+                    $('#targetTempDisplay').text(parseFloat(r.targetTemp).toFixed(1));
+                    $('#pidOutput').text(Math.round(r.pidOutput));
+
+                    if (r.extConnected) {
+                        $('#tempExt').text(parseFloat(r.tempExt).toFixed(1));
+                        $('#extStatus').text('connected').css('color','#639922');
+                    } else {
+                        $('#tempExt').text('--');
+                        $('#extStatus').text('not connected').css('color','#E24B4A');
+                    }
+
+                    // Sliders
+                    $('#targetTemp').val(r.targetTemp);
+                    $('#targetTempVal').text(parseFloat(r.targetTemp).toFixed(1) + '°C');
+                    $('#tempPlateMax').val(r.tempPlateMax);
+                    $('#tempPlateMaxVal').text(parseFloat(r.tempPlateMax).toFixed(1) + '°C');
+                    $('#targetRpm').val(r.targetRpm).attr('max', r.maxRpm);
+                    $('#targetRpmVal').text(Math.round(r.targetRpm) + ' rpm');
+
+                    // RPM metrics
+                    $('#targetRpmDisplay').text(Math.round(r.targetRpm));
+                    $('#currentRpm').text(Math.round(r.currentRpm));
+                    $('#pidMotorOutput').text(Math.round(r.pidMotorOutput));
+
+                    // PID Felder
+                    var pid = r.useExtSensor ? r.pidExt : r.pidPlate;
+                    $('#pidKp').val(pid.kp);
+                    $('#pidKi').val(pid.ki);
+                    $('#pidKd').val(pid.kd);
+                    $('#pidMotorKp').val(r.pidMotor.kp);
+                    $('#pidMotorKi').val(r.pidMotor.ki);
+                    $('#pidMotorKd').val(r.pidMotor.kd);
+
+                    updateHeaterUI();
+                    updateSensorUI();
+                    updateMotorUI();
+                },
+                error: function(xhr) { console.error('GET failed', xhr.status); }
+            });
+        }
+
+        // ── UI Update ────────────────────────────────────────
+        function updateHeaterUI() {
+            var on = state.heaterEnabled;
+            $('#heaterDot').attr('class', 'dot ' + (on ? 'dot-on' : 'dot-off'));
+            $('#heaterLabel').text('Heater ' + (on ? 'on' : 'off'))
+                             .css('color', on ? '#3B6D11' : '#A32D2D');
+            $('#heaterStatus').text(on ? 'heating' : 'off')
+                              .css('color', on ? '#639922' : '#E24B4A');
+            $('#btnHeater').text(on ? 'Turn off' : 'Turn on')
+                           .attr('class', 'btn ' + (on ? 'btn-off' : 'btn-on'));
+        }
+        function updateSensorUI() {
+            var ext = state.useExtSensor;
+            $('#sensorPill').text(ext ? 'EXT sensor' : 'PLATE')
+                            .attr('class', 'pill ' + (ext ? 'pill-ext' : 'pill-plate'));
+            $('#btnSensor').text(ext ? 'Switch to plate' : 'Switch to EXT')
+                           .attr('class', 'btn ' + (ext ? 'btn-off' : 'btn-on'));
+            $('#pidMode').text('Active mode: ' + (ext ? 'EXT sensor' : 'Plate'));
+            var pid = ext ? state.pidExt : state.pidPlate;
+            if (pid) {
+                $('#pidKp').val(pid.kp);
+                $('#pidKi').val(pid.ki);
+                $('#pidKd').val(pid.kd);
+            }
+        }
+        function updateMotorUI() {
+            var on = state.motorEnabled;
+            $('#motorDot').attr('class', 'dot ' + (on ? 'dot-on' : 'dot-off'));
+            $('#motorLabel').text('Motor ' + (on ? 'on' : 'off'))
+                            .css('color', on ? '#3B6D11' : '#A32D2D');
+            $('#btnMotor').text(on ? 'Turn off' : 'Turn on')
+                          .attr('class', 'btn ' + (on ? 'btn-off' : 'btn-on'));
+        }
+
+        // Status alle 2 Sekunden pollen
+        loadStatus();
+        setInterval(loadStatus, 2000);
+    </script>
+</body>
 </html>

@@ -1,33 +1,57 @@
-#ifndef StirrerConfig_H // include guard
-#define StirrerConfig_H
-
+#pragma once
+#include <Arduino.h>
 #include <Preferences.h>
 #include <ArduinoJson.h>
 
-
-class StirrerConfig{
-    public:
-        StirrerConfig();
-        void load();
-        void write();
-        JsonDocument toJson();
-        struct Wifi {
-                const char* ssid;
-                const char* password;
-            };
-        Wifi wifi;
-        struct Mqtt {
-                const char* ip;
-                const char* user;
-                const char* password;
-            };
-        Mqtt mqtt;
-    private:
-        Preferences preferences;
-        void loadWifi();
-        void writeWifi();
-        void loadMqtt();
-        void writeMqtt();
-        const char* readPrefString(const char * key);
+struct WifiConfig {
+    String ssid;
+    String password;
 };
-#endif // StirrerConfig_H
+
+struct MqttConfig {
+    String ip;
+    String user;
+    String password;
+};
+
+struct PidConfig {
+    double kp;
+    double ki;
+    double kd;
+};
+
+struct StirrerControlConfig {
+    float     targetTemp;
+    float     tempPlateMax;
+    float     targetRpm;
+    float     maxRpm;
+    bool      useExtSensor;
+    bool      heaterEnabled;
+    bool      motorEnabled;
+    PidConfig pidPlate;
+    PidConfig pidExt;
+    PidConfig pidMotor;
+};
+
+class StirrerConfig {
+public:
+    StirrerConfig();
+    void load();
+    void write();
+    void toJson(JsonDocument& doc);
+
+    WifiConfig           wifi;
+    MqttConfig           mqtt;
+    StirrerControlConfig control;
+
+private:
+    Preferences preferences;
+
+    void loadWifi();
+    void loadMqtt();
+    void loadControl();
+
+    void writeWifi();
+    void writeMqtt();
+    void writeControl();
+};
