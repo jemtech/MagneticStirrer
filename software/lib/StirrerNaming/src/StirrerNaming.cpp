@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static const char* AP_SSID_PREFIX = "ESP32-Stirrer-AP";
+static const char* AP_SSID_PREFIX = "Stirrer-AP";
 
 void buildMdnsHostName(char* out, size_t outSize, const char* stirrerId, const uint8_t mac[6]) {
     if (out == NULL || outSize == 0) return;

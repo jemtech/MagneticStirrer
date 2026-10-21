@@ -41,11 +41,6 @@ void StirrerConfig::loadWifi(){
     preferences.end();
 }
 
-const char* StirrerConfig::readPrefString(const char * key){
-    String origString = preferences.getString(key);
-    return origString.c_str();
-}
-
 void StirrerConfig::loadMqtt(){
     preferences.begin("mqtt", RO_MODE); // read only
     bool ipExsist = preferences.isKey("ip");       // Test for the existence

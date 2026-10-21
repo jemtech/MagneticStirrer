@@ -52,14 +52,14 @@ void test_hostname_handles_zero_size_buffer(void) {
 void test_ap_ssid_format(void) {
     char ssid[64];
     buildApSsid(ssid, sizeof(ssid), MAC);
-    TEST_ASSERT_EQUAL_STRING("ESP32-Stirrer-AP-0A:BC:01:FF:10:9E", ssid);
+    TEST_ASSERT_EQUAL_STRING("Stirrer-AP-0A:BC:01:FF:10:9E", ssid);
 }
 
-void test_ap_ssid_length_is_34_chars(void) {
-    // NOTE: 34 chars exceeds the 32 byte 802.11 SSID limit, so the MAC tail may get cut off
+void test_ap_ssid_fits_80211_limit(void) {
+    // 802.11 SSIDs are at most 32 bytes
     char ssid[64];
     buildApSsid(ssid, sizeof(ssid), MAC);
-    TEST_ASSERT_EQUAL_UINT(34, strlen(ssid));
+    TEST_ASSERT_LESS_OR_EQUAL_UINT(32, strlen(ssid));
 }
 
 int main(int, char**) {
@@ -71,6 +71,6 @@ int main(int, char**) {
     RUN_TEST(test_hostname_never_overflows_small_buffer);
     RUN_TEST(test_hostname_handles_zero_size_buffer);
     RUN_TEST(test_ap_ssid_format);
-    RUN_TEST(test_ap_ssid_length_is_34_chars);
+    RUN_TEST(test_ap_ssid_fits_80211_limit);
     return UNITY_END();
 }

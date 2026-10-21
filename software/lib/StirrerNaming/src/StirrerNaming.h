@@ -9,7 +9,7 @@
 // "esp32stirrer_<id>.lan" (id truncated to fit), or the MAC based name when stirrerId is empty.
 void buildMdnsHostName(char* out, size_t outSize, const char* stirrerId, const uint8_t mac[6]);
 
-// "ESP32-Stirrer-AP-AA:BB:CC:DD:EE:FF"
+// "Stirrer-AP-AA:BB:CC:DD:EE:FF" (28 chars, within the 32 byte SSID limit)
 void buildApSsid(char* out, size_t outSize, const uint8_t mac[6]);
 
 #endif // StirrerNaming_H

@@ -34,6 +34,5 @@ class StirrerConfig{
         void writeWifi();
         void loadMqtt();
         void writeMqtt();
-        const char* readPrefString(const char * key);
 };
 #endif // StirrerConfig_H

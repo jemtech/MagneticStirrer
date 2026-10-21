@@ -55,7 +55,7 @@ void setup(void) {
 
     stirrerDisplay.clear();
     String ipAddress = stirrerWifi.localIP().toString();
-    stirrerDisplay.write(ipAddress.c_str());
+    stirrerDisplay.print(ipAddress.c_str());
 
     ArduinoOTA.begin();
 
@@ -109,11 +109,11 @@ void loop(void) {
 
     if(2000 < millis() && 4000 > millis()) {
         stirrerOn(127);
-    } else if(40000 < millis() && 6000 > millis()) {
+    } else if(4000 < millis() && 6000 > millis()) {
         stirrerOn(180);
-    } else if(60000 < millis() && 8000 > millis()) {
+    } else if(6000 < millis() && 8000 > millis()) {
         stirrerOn(220);
-    } else if(80000 < millis() && 10000 > millis()) {
+    } else if(8000 < millis() && 10000 > millis()) {
         stirrerOn(255);
     } else {
         stirrerOff();
@@ -122,7 +122,6 @@ void loop(void) {
     if(millis() - lastLoop >= 1000) {
         lastLoop = millis();
         /*mqttHandlerPointer->publishStatus("sleep");*/
-        stirrerDisplay.print("Test");
     }
     delay(1);
 }
