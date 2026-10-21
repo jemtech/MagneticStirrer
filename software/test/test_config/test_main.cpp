@@ -15,6 +15,23 @@ static std::string toJsonString(StirrerConfig& config) {
     return out;
 }
 
+void test_public_json_omits_passwords(void) {
+    StirrerConfig config;
+    config.wifi.ssid = "my-network";
+    config.wifi.password = "s3cret";
+    config.mqtt.ip = "192.168.1.10";
+    config.mqtt.user = "stirrer";
+    config.mqtt.password = "mqtt-pw";
+
+    JsonDocument doc = config.toPublicJson();
+    std::string out;
+    serializeJson(doc, out);
+
+    TEST_ASSERT_EQUAL_STRING(
+        "{\"wifi\":{\"ssid\":\"my-network\"},\"mqtt\":{\"ip\":\"192.168.1.10\",\"user\":\"stirrer\"}}",
+        out.c_str());
+}
+
 void test_load_without_stored_config_uses_empty_defaults(void) {
     StirrerConfig config;
     config.load();
@@ -134,6 +151,7 @@ void test_special_characters_survive_roundtrip_and_json(void) {
 
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_public_json_omits_passwords);
     RUN_TEST(test_load_without_stored_config_uses_empty_defaults);
     RUN_TEST(test_load_persists_defaults);
     RUN_TEST(test_write_then_load_roundtrip);

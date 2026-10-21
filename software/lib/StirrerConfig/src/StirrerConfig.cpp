@@ -121,6 +121,13 @@ JsonDocument StirrerConfig::toJson(){
     return doc;
 }
 
+JsonDocument StirrerConfig::toPublicJson(){
+    JsonDocument doc = toJson();
+    doc["wifi"].remove("password");
+    doc["mqtt"].remove("password");
+    return doc;
+}
+
 
 const char* StirrerConfig::applyForm(const FormLookup& lookup){
     struct Field { const char* name; String* target; };

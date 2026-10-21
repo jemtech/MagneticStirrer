@@ -12,6 +12,8 @@ class StirrerConfig{
         void load();
         void write();
         JsonDocument toJson();
+        // Like toJson() but without passwords, safe to publish.
+        JsonDocument toPublicJson();
         // Looks up a posted form field by name; returns false when it is missing.
         typedef std::function<bool(const char* name, String& value)> FormLookup;
         // Fills the config from the config form. Returns nullptr on success,

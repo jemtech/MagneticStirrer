@@ -72,11 +72,10 @@ void setup(void) {
 
     lastLoop = 0;
     if (stirrerConfig.mqtt.ip.length() > 0) {
-        mqttHandlerPointer = new MqttHandler(stirrerId, &(stirrerConfig.mqtt));
+        mqttHandlerPointer = new MqttHandler(stirrerId, &stirrerConfig);
 
         mqttHandlerPointer->setup();
         mqttHandlerPointer->publishStatus("booted");
-        mqttHandlerPointer->publishIp();
 
     #ifdef DEBUG
         Serial.println("MqttHandler online");
@@ -95,6 +94,9 @@ void stirrerOn(int value){
     if(value == stirrerVal) return;
     stirrerVal = value;
     analogWrite(stirrerPin, value);
+    if(mqttHandlerPointer != nullptr) {
+        mqttHandlerPointer->publishSpeed(value);
+    }
 }
 
 void stirrerOff(){
