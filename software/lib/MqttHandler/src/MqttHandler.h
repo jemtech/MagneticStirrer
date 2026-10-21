@@ -7,7 +7,7 @@
 
 // Publishes stirrer state to "stirrer/<id>/<subtopic>".
 // All topics are retained, so subscribers get the last state immediately.
-// Status, ip, config, speed and temperature are (re)published on every (re)connect.
+// Status, ip, config, speed, temperature and pid are (re)published on every (re)connect.
 class MqttHandler{
     public:
         MqttHandler(const char* stirrerId, StirrerConfig * stirrerConfigPointer);
@@ -16,12 +16,16 @@ class MqttHandler{
         void loop();
         void publishStatus(const char* status);
         void publishIp();
-        // config without passwords as json
+        // config without passwords as json, only publishes when it changed
+        // (feedback for changes made via encoder, webserver or safety shutdown)
         void publishConfig();
         // measured stirrer speed in rpm, only publishes when it changed
         void publishSpeed(int speed);
         // only publishes when it changed by at least TEMPERATURE_THRESHOLD
         void publishTemperature(float temperature);
+        // pid state as json, outputs in % (rounded), only publishes when it changed
+        void publishPid(bool heaterEnabled, float heaterSetpoint, float heaterOutput,
+                        bool motorEnabled, float motorSetpoint, float motorOutput);
     private:
         bool reconnect();
         void publishState();
@@ -35,5 +39,7 @@ class MqttHandler{
         int speed;
         bool hasTemperature;
         float temperature;
+        String config;
+        String pid;
 };
 #endif // MqttHandler_H

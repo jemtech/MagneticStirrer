@@ -52,10 +52,14 @@ void MqttHandler::publishState(){
         publish("status", status.c_str(), true);
     }
     publishIp();
+    config = "";  // force publishing
     publishConfig();
     publish("speed", String(speed).c_str(), true);
     if (hasTemperature) {
         publish("temperature", String(temperature, 1).c_str(), true);
+    }
+    if (pid.length() > 0) {
+        publish("pid", pid.c_str(), true);
     }
 }
 
@@ -86,6 +90,8 @@ void MqttHandler::publishConfig(){
     JsonDocument doc = stirrerConfig->toPublicJson();
     String payload;
     serializeJson(doc, payload);
+    if (payload == config) return;
+    config = payload;
     publish("config", payload.c_str(), true);
 }
 
@@ -100,4 +106,22 @@ void MqttHandler::publishTemperature(float temperature){
     hasTemperature = true;
     this->temperature = temperature;
     publish("temperature", String(temperature, 1).c_str(), true);
+}
+
+void MqttHandler::publishPid(bool heaterEnabled, float heaterSetpoint, float heaterOutput,
+                             bool motorEnabled, float motorSetpoint, float motorOutput){
+    JsonDocument doc;
+    JsonObject heater = doc["heater"].to<JsonObject>();
+    heater["enabled"]  = heaterEnabled;
+    heater["setpoint"] = heaterSetpoint;
+    heater["output"]   = lroundf(heaterOutput);
+    JsonObject motor = doc["motor"].to<JsonObject>();
+    motor["enabled"]  = motorEnabled;
+    motor["setpoint"] = motorSetpoint;
+    motor["output"]   = lroundf(motorOutput);
+    String payload;
+    serializeJson(doc, payload);
+    if (payload == pid) return;
+    pid = payload;
+    publish("pid", payload.c_str(), true);
 }

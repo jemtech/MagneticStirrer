@@ -121,6 +121,14 @@ void loop(void) {
             mqttHandler->publishTemperature(stirrerControl.isExtConnected()
                 ? stirrerControl.getTempExt()
                 : stirrerControl.getTempPlate());
+            mqttHandler->publishPid(
+                stirrerConfig.control.heaterEnabled,
+                stirrerConfig.control.targetTemp,
+                stirrerControl.getPidOutput(),
+                stirrerConfig.control.motorEnabled,
+                stirrerConfig.control.targetRpm,
+                stirrerControl.getPidMotorOutput());
+            mqttHandler->publishConfig();
         }
     }
 
